@@ -29,4 +29,7 @@
 
 <p class="text-4xl">Welcome to Prayuj Calendar</p>
 <p class="text-lg">You are logged in as {JSON.stringify($userInfo)}</p>
-<p>{error}</p>
+
+{#if error}
+  <p>{error}</p>
+{/if}
