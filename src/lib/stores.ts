@@ -1,4 +1,4 @@
 import { writable } from "svelte/store";
-import { User } from "./types";
+import type { User } from "./types";
 
-export const userInfo = writable<User | null>(null);
+export const userInfo = writable<User>({});
