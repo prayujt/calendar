@@ -34,6 +34,7 @@
       for (let i = 1; i < 12; i++) {
           tempHours.push(`${i} AM`);
       }
+      tempHours.push('12 PM');
       for (let i = 1; i < 12; i++) {
           tempHours.push(`${i} PM`);
       }
