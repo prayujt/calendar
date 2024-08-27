@@ -2,10 +2,17 @@
   import { onMount, onDestroy } from 'svelte';
 
   let dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+  let monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
   let hours: string[] = [];
-  let weekDates: { day: string; date: number }[] = [];
+  let weekDates: { day: string; date: Date }[] = [];
+
   let currentDay = '';
   let currentTime = '';
+  let currentMonth = 0;
+  let includeNextMonth = false;
+  let currentYear = 0;
+  let dateOffset = 0;
 
   let morningElement: HTMLElement;
   let refs: { [day: string]: { [hour: string]: HTMLElement } } = {
@@ -36,13 +43,13 @@
 
       window.addEventListener('resize', updateCurrentTimeBar);
 
-      onDestroy(() => {
-          window.removeEventListener('resize', updateCurrentTimeBar);
-      });
-
       setInterval(() => {
           currentTime = new Date().toLocaleTimeString();
       }, 60000);
+  });
+
+  onDestroy(() => {
+      typeof window !== 'undefined' && window.removeEventListener('resize', updateCurrentTimeBar);
   });
 
   const scrollToStart = () => {
@@ -61,21 +68,28 @@
   const getHourString = () => currentTime.replace(currentTime.substring(currentTime.indexOf(':'), currentTime.indexOf(' ')), '');
   const getMinuteFraction = () => parseInt(currentTime.substring(currentTime.indexOf(':') + 1, currentTime.indexOf(':') + 3)) / 60;
 
-  const getWeekDates = (inputDate = new Date()) => {
-    const today = new Date(inputDate);
+  const getWeekDates = () => {
+    includeNextMonth = false;
+    const today = new Date();
     const day = today.getDay();
+    today.setDate(today.getDate() + dateOffset);
 
     const weekStart = new Date(today);
     weekStart.setDate(today.getDate() - day);
+    currentMonth = weekStart.getMonth();
+    currentYear = weekStart.getFullYear();
 
     const tempWeekDates = [];
     for (let i = 0; i < 7; i++) {
       const date = new Date(weekStart);
       date.setDate(weekStart.getDate() + i);
+      if (date.getMonth() !== currentMonth) {
+        includeNextMonth = true;
+      }
 
       tempWeekDates.push({
         day: dayNames[date.getDay()],
-        date: date.getDate()
+        date
       });
 
       if (i === day) {
@@ -85,6 +99,18 @@
 
     weekDates = [...tempWeekDates];
   }
+
+  const compareDates = (date1: Date, date2: Date): boolean => {
+    const month1 = date1.getMonth();
+    const day1 = date1.getDate();
+    const year1 = date1.getFullYear();
+
+    const month2 = date2.getMonth();
+    const day2 = date2.getDate();
+    const year2 = date2.getFullYear();
+
+    return month1 === month2 && day1 === day2 && year1 === year2;
+}
 
   const updateCurrentTimeBar = () => {
       if (refs[currentDay] && refs[currentDay][getHourString()]) {
@@ -96,26 +122,57 @@
       }
   }
 
+  const changeWeek = (next: boolean) => {
+      if (!weekDates.length) return;
+      dateOffset += next ? 7 : -7;
+      getWeekDates();
+  }
+
   $: morningElement, scrollToStart();
 
   $: refs, currentTime, updateCurrentTimeBar();
 </script>
 
 <div
-    class="ml-[22rem] fixed rounded-full h-0.5 w-[calc(100%-22.5rem)] bg-blue-500 text-white overflow-auto"
+    class="fixed top-16 right-2 cursor-pointer rounded-full bg-white shadow-md pl-3 p-2 transition-colors hover:bg-gray-100"
+    on:click={() => changeWeek(true)}
+>
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-8">
+        <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+    </svg>
+</div>
+
+<div
+    class="ml-[22rem] fixed rounded-full h-0.5 bg-blue-500 text-white overflow-auto"
     style="top: {barYPosition}px; width: {barWidth}px;">
 </div>
 
 <div class="ml-72 mr-4 flex flex-col h-screen">
-    <div class="ml-20 mb-2 grid grid-cols-7">
-        {#each weekDates as weekDate}
-            <div class="py-2 flex flex-col items-center">
-                <div class={`text-sm ${weekDate.day === currentDay && 'text-blue-700'}`}>{weekDate.day}</div>
-                <div class={`mt-1 text-2xl text-center ${weekDate.day === currentDay ? 'w-14 text-white rounded-full bg-blue-500 text-white' : ''}`}>
-                    {weekDate.date}
+    {#if currentMonth && currentYear}
+        <div class="text-center text-2xl text-gray-800 mr-2 my-2">
+            {includeNextMonth ? `${monthNames[currentMonth]} - ${monthNames[(currentMonth + 1) % 12]}` : monthNames[currentMonth] } {currentYear}
+        </div>
+    {/if}
+    <div class="flex items-center">
+        <div
+            class="ml-8 mb-1 cursor-pointer rounded-full bg-white shadow-md pr-3 p-2 transition-colors hover:bg-gray-100"
+            on:click={() => changeWeek(false)}
+        >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+            </svg>
+        </div>
+
+        <div class="mb-2 grid grid-cols-7 w-full">
+            {#each weekDates as weekDate}
+                <div class="py-2 flex flex-col items-center">
+                    <div class={`text-sm ${compareDates(weekDate.date, new Date()) && 'text-blue-700'}`}>{weekDate.day}</div>
+                    <div class={`mt-1 text-2xl text-center ${compareDates(weekDate.date, new Date()) ? 'w-14 text-white rounded-full bg-blue-500 text-white' : ''}`}>
+                        {weekDate.date.getDate()}
+                    </div>
                 </div>
-            </div>
-        {/each}
+            {/each}
+        </div>
     </div>
 
     <div class="flex-1 overflow-auto" on:scroll={updateCurrentTimeBar}>
