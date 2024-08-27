@@ -5,8 +5,6 @@
 
   import Sidebar from '$components/Sidebar.svelte';
 
-  let error: string;
-
   let daysOfWeek = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
   let hours: string[] = [];
 
@@ -45,13 +43,16 @@
         email: 'prayujtuli@hotmail.com',
         username: 'prayujt',
       } as User);
-      error = err.message;
     }
 
   });
 
  $: scrollTopElement, scrollToStart();
 </script>
+
+<svelte:head>
+    <title>Calendar</title>
+</svelte:head>
 
 <Sidebar />
 
