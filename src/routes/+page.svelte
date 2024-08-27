@@ -7,16 +7,23 @@
 
   let error: string;
 
-  let daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  let daysOfWeek = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
   let hours: string[] = [];
 
+  let scrollTopElement: HTMLElement;
+
+  const scrollToStart = () => {
+    if (scrollTopElement)
+      scrollTopElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   onMount(async () => {
-    let tempHours: string[] = [];
+    let tempHours: string[] = ['12 AM'];
     for (let i = 1; i < 12; i++) {
-      tempHours.push(`${i}AM`);
+      tempHours.push(`${i} AM`);
     }
     for (let i = 1; i < 12; i++) {
-      tempHours.push(`${i}PM`);
+      tempHours.push(`${i} PM`);
     }
     hours = tempHours;
     try {
@@ -40,25 +47,47 @@
       } as User);
       error = err.message;
     }
+
   });
 
+ $: scrollTopElement, scrollToStart();
 </script>
 
 <Sidebar />
 
-<div class="ml-72 grid grid-cols-8 grid-rows-[auto_1fr]">
-    <div class="p-2 text-center"></div>
-    {#each daysOfWeek as day}
-        <div class="bg-gray-100 p-2 text-center border-l border-b border-gray-300">{day}</div>
-    {/each}
+<div class="ml-72 flex flex-col h-screen">
+    <div class="ml-20 grid grid-cols-7">
+        {#each daysOfWeek as day}
+            <div class="p-2 text-center">{day}</div>
+        {/each}
+    </div>
 
-    <!-- Calendar Grid -->
-    {#each hours as hour}
-        <div class="p-2 text-center">{hour}</div>
-        {#each daysOfWeek as _}
-            <div class="p-2 border-t border-l border-gray-100 bg-white hover:bg-gray-100 transition-colors cursor-pointer">
+    <div class="flex-1 overflow-auto">
+        {#each hours as hour}
+            <div class="flex">
+                <div class="text-xs text-gray-600 mr-2 ml-2 w-16 text-center">
+                    {hour}
+                </div>
 
+                {#each daysOfWeek as day}
+                  {#if hour === '8 AM' && day === 'SUN'}
+                    <div
+                      class="hour-card flex-1 p-2 border-t border-l border-gray-100 bg-white hover:bg-gray-100 transition-colors cursor-pointer"
+                      bind:this={scrollTopElement}>
+                    </div>
+                  {:else}
+                    <div class="hour-card flex-1 p-2 border-t border-l border-gray-100 bg-white hover:bg-gray-100 transition-colors cursor-pointer">
+                    </div>
+                  {/if}
+                {/each}
             </div>
         {/each}
-    {/each}
+    </div>
 </div>
+
+<style>
+  .hour-card {
+    min-height: 75px;
+    max-height: 100px;
+  }
+</style>
