@@ -4,26 +4,9 @@
   import type { IdpUser, User } from '$lib/types';
 
   import Sidebar from '$components/Sidebar.svelte';
-
-  let daysOfWeek = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
-  let hours: string[] = [];
-
-  let scrollTopElement: HTMLElement;
-
-  const scrollToStart = () => {
-    if (scrollTopElement)
-      scrollTopElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
+  import CalendarWeek from '$components/CalendarWeek.svelte';
 
   onMount(async () => {
-    let tempHours: string[] = ['12 AM'];
-    for (let i = 1; i < 12; i++) {
-      tempHours.push(`${i} AM`);
-    }
-    for (let i = 1; i < 12; i++) {
-      tempHours.push(`${i} PM`);
-    }
-    hours = tempHours;
     try {
       const response = await fetch(`https://idp.prayujt.com/sessions/whoami`, {
         credentials: 'include',
@@ -47,7 +30,6 @@
 
   });
 
- $: scrollTopElement, scrollToStart();
 </script>
 
 <svelte:head>
@@ -56,39 +38,4 @@
 
 <Sidebar />
 
-<div class="ml-72 flex flex-col h-screen">
-    <div class="ml-20 grid grid-cols-7">
-        {#each daysOfWeek as day}
-            <div class="p-2 text-center">{day}</div>
-        {/each}
-    </div>
-
-    <div class="flex-1 overflow-auto">
-        {#each hours as hour}
-            <div class="flex">
-                <div class="text-xs text-gray-600 mr-2 ml-2 w-16 text-center">
-                    {hour}
-                </div>
-
-                {#each daysOfWeek as day}
-                  {#if hour === '8 AM' && day === 'SUN'}
-                    <div
-                      class="hour-card flex-1 p-2 border-t border-l border-gray-100 bg-white hover:bg-gray-100 transition-colors cursor-pointer"
-                      bind:this={scrollTopElement}>
-                    </div>
-                  {:else}
-                    <div class="hour-card flex-1 p-2 border-t border-l border-gray-100 bg-white hover:bg-gray-100 transition-colors cursor-pointer">
-                    </div>
-                  {/if}
-                {/each}
-            </div>
-        {/each}
-    </div>
-</div>
-
-<style>
-  .hour-card {
-    min-height: 75px;
-    max-height: 100px;
-  }
-</style>
+<CalendarWeek />
