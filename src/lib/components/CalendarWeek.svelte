@@ -15,6 +15,8 @@
   let dateOffset = 0;
 
   let morningElement: HTMLElement;
+  let gridDiv: HTMLElement;
+
   let refs: { [day: string]: { [hour: string]: HTMLElement } } = {
     SUN: {},
     MON: {},
@@ -135,7 +137,7 @@
 </script>
 
 <div
-    class="fixed top-16 right-2 cursor-pointer rounded-full bg-white shadow-md pl-3 p-2 transition-colors hover:bg-gray-100"
+    class="fixed top-14 right-2 cursor-pointer rounded-full bg-white shadow-md pl-3 p-2 transition-colors hover:bg-gray-100"
     on:click={() => changeWeek(true)}
 >
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-8">
@@ -143,10 +145,12 @@
     </svg>
 </div>
 
-<div
-    class="ml-[22rem] fixed rounded-full h-0.5 bg-blue-500 text-white overflow-auto"
-    style="top: {barYPosition}px; width: {barWidth}px;">
-</div>
+{#if gridDiv && barYPosition > gridDiv.getBoundingClientRect().top}
+    <div
+        class="ml-[22rem] fixed rounded-full h-0.5 bg-blue-500 text-white"
+        style="top: {barYPosition}px; width: {barWidth}px;">
+    </div>
+{/if}
 
 <div class="ml-72 mr-4 flex flex-col h-screen">
     {#if currentMonth && currentYear}
@@ -156,7 +160,7 @@
     {/if}
     <div class="flex items-center">
         <div
-            class="ml-8 mb-1 cursor-pointer rounded-full bg-white shadow-md pr-3 p-2 transition-colors hover:bg-gray-100"
+            class="ml-8 mb-4 cursor-pointer rounded-full bg-white shadow-md pr-3 p-2 transition-colors hover:bg-gray-100"
             on:click={() => changeWeek(false)}
         >
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-8">
@@ -176,7 +180,7 @@
         </div>
     </div>
 
-    <div class="flex-1 overflow-auto" on:scroll={updateCurrentTimeBar}>
+    <div class="flex-1 overflow-auto" bind:this={gridDiv} on:scroll={updateCurrentTimeBar}>
         {#each hours as hour}
             <div class="flex">
                 {#if hour === '8 AM'}
