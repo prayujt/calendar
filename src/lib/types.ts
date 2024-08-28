@@ -16,3 +16,19 @@ export interface User {
     username: string;
     email: string;
 }
+
+export interface Event {
+    id: string;
+    date: Date;
+    title: string;
+    description: string;
+    duration: number;
+    accepted: boolean;
+}
+
+export interface EventPosition {
+    top: number;
+    left: number;
+    width: number;
+    height: number;
+}

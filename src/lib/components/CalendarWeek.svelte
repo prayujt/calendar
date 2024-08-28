@@ -1,6 +1,11 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
 
+  import CalendarWeekEvent from './CalendarWeekEvent.svelte';
+
+  import type { Event, EventPosition } from '$lib/types';
+  import { compareDates, getTimeString, getCurrentHour, getMinuteFraction } from '$lib/utils';
+
   let dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
   let monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
@@ -8,14 +13,16 @@
   let weekDates: { day: string; date: Date }[] = [];
 
   let currentDay = '';
-  let currentTime = '';
-  let currentMonth = 0;
+  let currentTime: Date = new Date();
+  let weekStart: Date = new Date();
+
   let includeNextMonth = false;
-  let currentYear = 0;
   let dateOffset = 0;
 
   let morningElement: HTMLElement;
   let gridDiv: HTMLElement;
+
+  let calendarMounted = false;
 
   let refs: { [day: string]: { [hour: string]: HTMLElement } } = {
     SUN: {},
@@ -30,6 +37,35 @@
   let barYPosition = -1;
   let barWidth = -1;
 
+  let events = [
+    {
+      id: '1',
+      date: new Date('2024-08-29T22:30:00'),
+      title: 'Call with Sofia',
+      description: 'Discuss the new project',
+      duration: 120,
+      accepted: true
+    } as Event,
+    {
+      id: '2',
+      date: new Date('2024-08-29T13:55:00'),
+      title: 'Computer Network Fundamentals',
+      description: 'Discuss the new project',
+      duration: 120,
+      accepted: false
+    } as Event,
+    {
+      id: '3',
+      date: new Date('2024-08-30T21:00:00'),
+      title: 'Meet with Maalav',
+      description: 'Discuss the new project',
+      duration: 120,
+      accepted: true
+    } as Event
+  ]
+
+  let eventPositions = new Map<string, EventPosition>();
+
   onMount(() => {
       getWeekDates();
       let tempHours: string[] = ['12 AM'];
@@ -41,52 +77,52 @@
           tempHours.push(`${i} PM`);
       }
       hours = tempHours;
+      currentTime = new Date();
 
-      currentTime = new Date().toLocaleTimeString();
-
-      window.addEventListener('resize', updateCurrentTimeBar);
+      window.addEventListener('resize', updatePositions);
 
       setInterval(() => {
-          currentTime = new Date().toLocaleTimeString();
+          currentTime = new Date();
       }, 60000);
   });
 
   onDestroy(() => {
-      typeof window !== 'undefined' && window.removeEventListener('resize', updateCurrentTimeBar);
+      typeof window !== 'undefined' && window.removeEventListener('resize', updatePositions);
   });
 
-  const scrollToStart = () => {
+ /**
+  * Scrolls to a specific time on the calendar
+  * If the time is between 8 AM and 6 PM, it scrolls to have 8 AM at the top
+  * If the time is before 8 AM, it scrolls to have 12 AM at the top
+  * If the time is after 6 PM, it scrolls to display the time, which is effectively scrolling to the bottom
+  */
+  const scrollToStart = (): void => {
       if (!currentDay) return;
       const hour = getCurrentHour();
-      if (hour < 8) {
-          refs[currentDay]['12 AM'].scrollIntoView({ behavior: 'smooth', block: 'start' });
-      } else if (hour >= 20) {
-          refs[currentDay]['8 PM'].scrollIntoView({ behavior: 'smooth', block: 'start' });
-      } else if (morningElement) {
-          morningElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
+      if (hour < 8) refs[currentDay]['12 AM'].scrollIntoView({ behavior: 'smooth', block: 'start' });
+      else if (hour >= 18) refs[currentDay]['8 PM'].scrollIntoView({ behavior: 'smooth', block: 'start' });
+      else if (morningElement) morningElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  const getCurrentHour = () => new Date().getHours();
-  const getHourString = () => currentTime.replace(currentTime.substring(currentTime.indexOf(':'), currentTime.indexOf(' ')), '');
-  const getMinuteFraction = () => parseInt(currentTime.substring(currentTime.indexOf(':') + 1, currentTime.indexOf(':') + 3)) / 60;
-
-  const getWeekDates = () => {
+  /**
+   * Sets the weekDates array with the dates of the week
+   * The values are offset by dateOffset from today's date
+   */
+  const getWeekDates = (): void => {
     includeNextMonth = false;
     const today = new Date();
     const day = today.getDay();
     today.setDate(today.getDate() + dateOffset);
 
-    const weekStart = new Date(today);
-    weekStart.setDate(today.getDate() - day);
-    currentMonth = weekStart.getMonth();
-    currentYear = weekStart.getFullYear();
+    const tempWeekStart = new Date(today);
+    tempWeekStart.setDate(today.getDate() - day);
+    weekStart = tempWeekStart;
 
     const tempWeekDates = [];
     for (let i = 0; i < 7; i++) {
       const date = new Date(weekStart);
       date.setDate(weekStart.getDate() + i);
-      if (date.getMonth() !== currentMonth) {
+      if (date.getMonth() !== weekStart.getMonth()) {
         includeNextMonth = true;
       }
 
@@ -103,21 +139,14 @@
     weekDates = [...tempWeekDates];
   }
 
-  const compareDates = (date1: Date, date2: Date): boolean => {
-    const month1 = date1.getMonth();
-    const day1 = date1.getDate();
-    const year1 = date1.getFullYear();
-
-    const month2 = date2.getMonth();
-    const day2 = date2.getDate();
-    const year2 = date2.getFullYear();
-
-    return month1 === month2 && day1 === day2 && year1 === year2;
-}
-
-  const updateCurrentTimeBar = () => {
-      if (refs[currentDay] && refs[currentDay][getHourString()]) {
-          const rect = refs[currentDay][getHourString()].getBoundingClientRect();
+  /**
+   * Updates the positions of the current time bar and the events on the calendar
+   * Triggers when the window is resized or scrolled
+   */
+  const updatePositions = (): void => {
+      if (calendarMounted) {
+          generateEventPositions();
+          const rect = refs[currentDay][getTimeString(false)].getBoundingClientRect();
           barYPosition = (rect.y + getMinuteFraction() * rect.height);
           const leftEdge = refs['SUN']['12 AM'].getBoundingClientRect().left;
           const rightEdge = refs['SAT']['12 AM'].getBoundingClientRect().right;
@@ -125,15 +154,57 @@
       }
   }
 
-  const changeWeek = (next: boolean) => {
+  /**
+   * Changes the week displayed on the calendar
+   * @param next - true if the next week should be displayed, false if the previous week should be displayed
+   */
+  const changeWeek = (next: boolean): void => {
       if (!weekDates.length) return;
       dateOffset += next ? 7 : -7;
       getWeekDates();
   }
 
-  $: morningElement, scrollToStart();
+  /**
+   * Checks if all the calendar elements have been mounted
+   * @returns true if all the calendar elements have been attached to the refs object, false otherwise
+   */
+  const checkCalendarMounted = (): boolean => {
+      let count = 0;
+      for (const outerKey in refs) {
+          if (refs.hasOwnProperty(outerKey)) {
+              count += Object.keys(refs[outerKey]).length;
+          }
+      }
+      return count === 7 * 24;
+  }
 
-  $: refs, currentTime, updateCurrentTimeBar();
+  /**
+   * Generates the positions of the events on the calendar
+   */
+  const generateEventPositions = (): void => {
+      const newEventPositions = new Map<string, EventPosition>();
+      for (const event of events) {
+          const dayName = dayNames[event.date.getDay()];
+          if (!refs[dayName] || !refs[dayName][getTimeString(false, event.date)]) {
+            newEventPositions.set(event.id, { top: 0, left: 0, height: 0, width: 0 });
+            return;
+          }
+
+          const rect = refs[dayName][getTimeString(false, event.date)].getBoundingClientRect();
+          const top = rect.y + getMinuteFraction(event.date) * rect.height;
+          const left = rect.x;
+          const height = event.duration / 60 * rect.height;
+          const width = rect.width;
+
+          newEventPositions.set(event.id, { top, left, height, width });
+      }
+      eventPositions = newEventPositions;
+  }
+
+  $: morningElement, scrollToStart();
+  $: refs, currentTime, updatePositions();
+  $: refs, calendarMounted = checkCalendarMounted();
+  $: refs, generateEventPositions();
 </script>
 
 <div
@@ -152,10 +223,18 @@
     </div>
 {/if}
 
+{#if calendarMounted}
+    {#each events as event}
+        {#if eventPositions.has(event.id) && event.date >= weekStart && event.date < new Date(weekStart.getTime() + 7 * 24 * 60 * 60 * 1000)}
+            <CalendarWeekEvent {event} position={eventPositions.get(event.id)}/>
+        {/if}
+    {/each}
+{/if}
+
 <div class="ml-72 mr-4 flex flex-col h-screen">
-    {#if currentMonth && currentYear}
+    {#if weekStart.getMonth() && weekStart.getFullYear()}
         <div class="text-center text-2xl text-gray-800 mr-2 my-2">
-            {includeNextMonth ? `${monthNames[currentMonth]} - ${monthNames[(currentMonth + 1) % 12]}` : monthNames[currentMonth] } {currentYear}
+            {includeNextMonth ? `${monthNames[weekStart.getMonth()]} - ${monthNames[(weekStart.getMonth() + 1) % 12]}` : monthNames[weekStart.getMonth()] } {weekStart.getFullYear()}
         </div>
     {/if}
     <div class="flex items-center">
@@ -180,7 +259,7 @@
         </div>
     </div>
 
-    <div class="flex-1 overflow-auto" bind:this={gridDiv} on:scroll={updateCurrentTimeBar}>
+    <div class="flex-1 overflow-auto" bind:this={gridDiv} on:scroll={updatePositions}>
         {#each hours as hour}
             <div class="flex">
                 {#if hour === '8 AM'}
