@@ -61,7 +61,16 @@
       description: 'Discuss the new project',
       duration: 120,
       accepted: true
+    } as Event,
+    {
+      id: '4',
+      date: new Date('2024-08-29T16:05:00'),
+      title: 'Meet with Maalav',
+      description: 'Discuss the new project',
+      duration: 115,
+      accepted: true
     } as Event
+
   ]
 
   let eventPositions = new Map<string, EventPosition>();
