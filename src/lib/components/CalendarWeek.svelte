@@ -64,7 +64,7 @@
     } as Event,
     {
       id: '4',
-      date: new Date('2024-08-29T16:05:00'),
+      date: new Date('2024-08-29T17:10:00'),
       title: 'DSA Office Hours',
       description: 'MALA 5200 with Matthew',
       duration: 115,
@@ -223,7 +223,7 @@
             left = rect.x + index * width;
         }
 
-        const top = rect.y + getMinuteFraction(event.date) * rect.height;
+        let top = rect.y + getMinuteFraction(event.date) * rect.height;
         const height = (event.duration / 60) * rect.height;
 
         newEventPositions.set(event.id, { top, left, height, width });
@@ -235,11 +235,11 @@
   $: morningElement, scrollToStart();
   $: refs, currentTime, calendarMounted, updatePositions();
   $: refs, calendarMounted = checkCalendarMounted();
-  $: refs, generateEventPositions();
+  $: refs, gridDiv, generateEventPositions();
 </script>
 
 <div
-    class="fixed top-14 right-2 cursor-pointer rounded-full bg-white shadow-md pl-3 p-2 transition-colors hover:bg-gray-100"
+    class="fixed top-14 right-2 cursor-pointer rounded-full bg-white shadow-md pl-3 p-2 transition-colors hover:bg-gray-100 z-50"
     on:click={() => changeWeek(true)}
 >
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-8">
@@ -278,7 +278,7 @@
             </svg>
         </div>
 
-        <div class="mb-2 grid grid-cols-7 w-full">
+        <div class="mb-2 grid grid-cols-7 w-full bg-white z-40">
             {#each weekDates as weekDate}
                 <div class="py-2 flex flex-col items-center">
                     <div class={`text-sm ${compareDates(weekDate.date, new Date()) && 'text-blue-700'}`}>{weekDate.day}</div>
