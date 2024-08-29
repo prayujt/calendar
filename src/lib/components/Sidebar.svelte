@@ -6,7 +6,7 @@
   let isLoaded = false;
 </script>
 
-<aside class="fixed shadow h-screen bg-slate-50 w-72 z-50">
+<aside class="shadow h-screen bg-slate-50 z-50 overflow-hidden">
     <div class="mt-10 flex flex-col items-center p-1.5">
         <div class="mb-5">
           {#if !$userInfo || $userInfo.name === 'Prayuj Tuli'}

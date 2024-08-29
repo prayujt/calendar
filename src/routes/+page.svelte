@@ -36,6 +36,12 @@
     <title>Calendar</title>
 </svelte:head>
 
-<Sidebar />
+<div class="md:grid md:grid-cols-[15%_85%]">
+    <div class="md:block hidden">
+        <Sidebar />
+    </div>
 
-<CalendarWeek />
+    <div>
+        <CalendarWeek />
+    </div>
+</div>

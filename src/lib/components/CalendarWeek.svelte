@@ -56,7 +56,7 @@
     } as Event,
     {
       id: '3',
-      date: new Date('2024-08-30T21:00:00'),
+      date: new Date('2024-08-29T21:00:00'),
       title: 'Meet with Maalav',
       description: 'Discuss the new project',
       duration: 120,
@@ -65,8 +65,8 @@
     {
       id: '4',
       date: new Date('2024-08-29T16:05:00'),
-      title: 'Meet with Maalav',
-      description: 'Discuss the new project',
+      title: 'DSA Office Hours',
+      description: 'MALA 5200 with Matthew',
       duration: 115,
       accepted: true
     } as Event
@@ -191,27 +191,49 @@
    * Generates the positions of the events on the calendar
    */
   const generateEventPositions = (): void => {
-      const newEventPositions = new Map<string, EventPosition>();
-      for (const event of events) {
-          const dayName = dayNames[event.date.getDay()];
-          if (!refs[dayName] || !refs[dayName][getTimeString(false, event.date)]) {
+    const newEventPositions = new Map<string, EventPosition>();
+
+    for (const event of events) {
+        const dayName = dayNames[event.date.getDay()];
+        if (!refs[dayName] || !refs[dayName][getTimeString(false, event.date)]) {
             newEventPositions.set(event.id, { top: 0, left: 0, height: 0, width: 0 });
-            return;
-          }
+            continue;
+        }
 
-          const rect = refs[dayName][getTimeString(false, event.date)].getBoundingClientRect();
-          const top = rect.y + getMinuteFraction(event.date) * rect.height;
-          const left = rect.x;
-          const height = event.duration / 60 * rect.height;
-          const width = rect.width;
+        const rect = refs[dayName][getTimeString(false, event.date)].getBoundingClientRect();
+        const eventStart = event.date.getTime();
+        const eventEnd = eventStart + event.duration * 60 * 1000;
 
-          newEventPositions.set(event.id, { top, left, height, width });
-      }
-      eventPositions = newEventPositions;
-  }
+        const overlappingEvents = events.filter(otherEvent => {
+            if (otherEvent === event) return false;
+            const otherEventStart = otherEvent.date.getTime();
+            const otherEventEnd = otherEventStart + otherEvent.duration * 60 * 1000;
+
+            return (eventStart < otherEventEnd && eventEnd > otherEventStart);
+        });
+
+        let width = rect.width;
+        let left = rect.x;
+
+        if (overlappingEvents.length > 0) {
+            width = rect.width / (overlappingEvents.length + 1);
+            // Sort overlapping events by start time to ensure proper side-by-side positioning
+            const sortedOverlaps = [event, ...overlappingEvents].sort((a, b) => a.date.getTime() - b.date.getTime());
+            const index = sortedOverlaps.indexOf(event);
+            left = rect.x + index * width;
+        }
+
+        const top = rect.y + getMinuteFraction(event.date) * rect.height;
+        const height = (event.duration / 60) * rect.height;
+
+        newEventPositions.set(event.id, { top, left, height, width });
+    }
+
+    eventPositions = newEventPositions;
+  };
 
   $: morningElement, scrollToStart();
-  $: refs, currentTime, updatePositions();
+  $: refs, currentTime, calendarMounted, updatePositions();
   $: refs, calendarMounted = checkCalendarMounted();
   $: refs, generateEventPositions();
 </script>
@@ -227,7 +249,7 @@
 
 {#if gridDiv && barYPosition > gridDiv.getBoundingClientRect().top}
     <div
-        class="ml-[22rem] fixed rounded-full h-0.5 bg-blue-500 text-white"
+        class="ml-[4rem] fixed rounded-full h-0.5 bg-blue-500 text-white"
         style="top: {barYPosition}px; width: {barWidth}px;">
     </div>
 {/if}
@@ -240,7 +262,7 @@
     {/each}
 {/if}
 
-<div class="ml-72 mr-4 flex flex-col h-screen">
+<div class="mr-4 flex flex-col h-screen">
     {#if weekStart.getMonth() && weekStart.getFullYear()}
         <div class="text-center text-2xl text-gray-800 mr-2 my-2">
             {includeNextMonth ? `${monthNames[weekStart.getMonth()]} - ${monthNames[(weekStart.getMonth() + 1) % 12]}` : monthNames[weekStart.getMonth()] } {weekStart.getFullYear()}
