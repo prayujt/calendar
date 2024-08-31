@@ -57,7 +57,7 @@
     {
       id: '3',
       date: new Date('2024-08-29T21:00:00'),
-      title: 'Meet with Maalav',
+      title: 'Meet with Maalav and discuss the new project',
       description: 'Discuss the new project',
       duration: 120,
       accepted: true
@@ -318,7 +318,7 @@
 
                 {#each dayNames as dayName}
                     <div
-                        class="hour-card flex-1 p-2 border-t border-l border-gray-200 bg-white hover:bg-gray-100 transition-colors cursor-pointer"
+                        class="hour-card flex-1 p-2 border-t border-l border-gray-200 bg-white hover:bg-gray-100 transition-colors"
                         bind:this={refs[dayName][hour]}
                     >
                     </div>
@@ -330,7 +330,7 @@
 
 <style>
     .hour-card {
-        min-height: 75px;
-        max-height: 100px;
+        min-height: 50px;
+        max-height: 75px;
     }
 </style>

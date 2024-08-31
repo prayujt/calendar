@@ -12,15 +12,11 @@
 
 <div
   style="top: {position.top}px; left: {position.left}px; height: {position.height}px; width: {position.width}px;"
-  class={`transition-fade fixed h-full rounded-md border overflow-hidden z-20 ${event.accepted ? 'bg-blue-200' : 'bg-gray-400'}`}>
-  <div class="flex items-center space-x-2 p-2">
-    <div>
-      <h3 class="text-lg font-semibold">{event.title}</h3>
-      <p class="text-sm">{getTimeRange(event.date, event.duration)}</p>
+  class={`shadow-lg cursor-pointer transition-fade fixed rounded-md border overflow-hidden z-20 ${event.accepted ? 'bg-blue-200' : 'bg-white'}`}>
+  <div class="flex flex-col h-full p-2">
+    <div class="flex-1 overflow-hidden">
+      <p class="text-xs font-semibold">{event.title}</p>
     </div>
+    <p class="text-xs">{getTimeRange(event.date, event.duration)}</p>
   </div>
 </div>
-
-<style>
-
-</style>
