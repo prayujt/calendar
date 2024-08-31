@@ -6,7 +6,7 @@
   let isLoaded = false;
 </script>
 
-<aside class="shadow h-screen bg-slate-50 z-50 overflow-hidden">
+<aside class="shadow h-screen bg-slate-50 z-50 overflow-hidden" on:wheel={(e) => e.preventDefault()}>
     <div class="mt-10 flex flex-col items-center p-1.5">
         <div class="mb-5">
           {#if !$userInfo || $userInfo.name === 'Prayuj Tuli'}

@@ -70,7 +70,6 @@
       duration: 115,
       accepted: true
     } as Event
-
   ]
 
   let eventPositions = new Map<string, EventPosition>();
@@ -232,6 +231,13 @@
     eventPositions = newEventPositions;
   };
 
+  const scrollFixedElement = (event: WheelEvent): void => {
+      event.preventDefault();
+      const delta = event.deltaY || event.wheelDeltaY || event.detail;
+
+      gridDiv.scrollBy({ top: delta });
+  }
+
   $: morningElement, scrollToStart();
   $: refs, currentTime, calendarMounted, updatePositions();
   $: refs, calendarMounted = checkCalendarMounted();
@@ -241,6 +247,7 @@
 <div
     class="fixed top-14 right-2 cursor-pointer rounded-full bg-white shadow-md pl-3 p-2 transition-colors hover:bg-gray-100 z-50"
     on:click={() => changeWeek(true)}
+    on:wheel={(e) => e.preventDefault()}
 >
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-8">
         <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
@@ -250,47 +257,53 @@
 {#if gridDiv && barYPosition > gridDiv.getBoundingClientRect().top}
     <div
         class="ml-[4rem] fixed rounded-full h-0.5 bg-blue-500 text-white"
-        style="top: {barYPosition}px; width: {barWidth}px;">
+        style="top: {barYPosition}px; width: {barWidth}px;"
+        on:wheel={(e) => e.preventDefault()}
+    >
     </div>
 {/if}
 
 {#if calendarMounted}
     {#each events as event}
         {#if eventPositions.has(event.id) && event.date >= weekStart && event.date < new Date(weekStart.getTime() + 7 * 24 * 60 * 60 * 1000)}
+          <div class="overflow-y-auto" on:wheel={scrollFixedElement}>
             <CalendarWeekEvent {event} position={eventPositions.get(event.id)}/>
+          </div>
         {/if}
     {/each}
 {/if}
 
-<div class="mr-4 flex flex-col h-screen">
-    {#if weekStart.getMonth() && weekStart.getFullYear()}
-        <div class="text-center text-2xl text-gray-800 mr-2 my-2">
-            {includeNextMonth ? `${monthNames[weekStart.getMonth()]} - ${monthNames[(weekStart.getMonth() + 1) % 12]}` : monthNames[weekStart.getMonth()] } {weekStart.getFullYear()}
-        </div>
-    {/if}
-    <div class="flex items-center">
-        <div
-            class="ml-8 mb-4 cursor-pointer rounded-full bg-white shadow-md pr-3 p-2 transition-colors hover:bg-gray-100"
-            on:click={() => changeWeek(false)}
-        >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-8">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
-            </svg>
-        </div>
+<div class="mr-10 flex flex-col h-screen">
+    <div on:wheel={(e) => e.preventDefault()}>
+        {#if weekStart.getMonth() && weekStart.getFullYear()}
+            <div class="text-center text-2xl text-gray-800 mr-2 my-2">
+                {includeNextMonth ? `${monthNames[weekStart.getMonth()]} - ${monthNames[(weekStart.getMonth() + 1) % 12]}` : monthNames[weekStart.getMonth()] } {weekStart.getFullYear()}
+            </div>
+        {/if}
+        <div class="flex items-center">
+            <div
+                class="ml-8 mb-4 cursor-pointer rounded-full bg-white shadow-md pr-3 p-2 transition-colors hover:bg-gray-100"
+                on:click={() => changeWeek(false)}
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+                </svg>
+            </div>
 
-        <div class="mb-2 grid grid-cols-7 w-full bg-white z-40">
-            {#each weekDates as weekDate}
-                <div class="py-2 flex flex-col items-center">
-                    <div class={`text-sm ${compareDates(weekDate.date, new Date()) && 'text-blue-700'}`}>{weekDate.day}</div>
-                    <div class={`mt-1 text-2xl text-center ${compareDates(weekDate.date, new Date()) ? 'w-14 text-white rounded-full bg-blue-500 text-white' : ''}`}>
-                        {weekDate.date.getDate()}
+            <div class="mb-2 grid grid-cols-7 w-full bg-white z-40">
+                {#each weekDates as weekDate}
+                    <div class="py-2 flex flex-col items-center">
+                        <div class={`text-sm ${compareDates(weekDate.date, new Date()) && 'text-blue-700'}`}>{weekDate.day}</div>
+                        <div class={`mt-1 text-2xl text-center ${compareDates(weekDate.date, new Date()) ? 'w-14 text-white rounded-full bg-blue-500 text-white' : ''}`}>
+                            {weekDate.date.getDate()}
+                        </div>
                     </div>
-                </div>
-            {/each}
+                {/each}
+            </div>
         </div>
     </div>
 
-    <div class="flex-1 overflow-auto" bind:this={gridDiv} on:scroll={updatePositions}>
+    <div class="no-scrollbar flex-1 overflow-auto overscroll-none" bind:this={gridDiv} on:scroll={updatePositions}>
         {#each hours as hour}
             <div class="flex">
                 {#if hour === '8 AM'}
