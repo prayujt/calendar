@@ -8,6 +8,11 @@
 
   onMount(async () => {
     try {
+      const test = await fetch(`https://api.calendar.prayujt.com/events`, {
+        credentials: 'include',
+      })
+      console.log(test);
+      console.log(await test.json());
       const response = await fetch(`https://idp.prayujt.com/sessions/whoami`, {
         credentials: 'include',
       });
