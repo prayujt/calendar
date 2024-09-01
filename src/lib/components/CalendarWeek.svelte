@@ -2,6 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
 
   import CalendarWeekEvent from './CalendarWeekEvent.svelte';
+  import EventDetailPopup from './EventDetailPopup.svelte';
 
   import type { Event, EventPosition } from '$lib/types';
   import { compareDates, getTimeString, getCurrentHour, getMinuteFraction } from '$lib/utils';
@@ -40,7 +41,7 @@
   let events = [
     {
       id: '1',
-      date: new Date('2024-08-29T22:30:00'),
+      date: new Date('2024-09-05T22:30:00'),
       title: 'Call with Sofia',
       description: 'Discuss the new project',
       duration: 120,
@@ -48,7 +49,7 @@
     } as Event,
     {
       id: '2',
-      date: new Date('2024-08-29T13:55:00'),
+      date: new Date('2024-09-05T13:55:00'),
       title: 'Computer Network Fundamentals',
       description: 'Discuss the new project',
       duration: 120,
@@ -56,7 +57,7 @@
     } as Event,
     {
       id: '3',
-      date: new Date('2024-08-29T21:00:00'),
+      date: new Date('2024-09-05T21:00:00'),
       title: 'Meet with Maalav and discuss the new project',
       description: 'Discuss the new project',
       duration: 120,
@@ -64,7 +65,7 @@
     } as Event,
     {
       id: '4',
-      date: new Date('2024-08-29T17:10:00'),
+      date: new Date('2024-09-05T17:10:00'),
       title: 'DSA Office Hours',
       description: 'MALA 5200 with Matthew',
       duration: 115,
@@ -73,6 +74,9 @@
   ]
 
   let eventPositions = new Map<string, EventPosition>();
+  let showDetails = false;
+  let selectedEvent: Event;
+  let selectedPosition: EventPosition;
 
   onMount(() => {
       getWeekDates();
@@ -221,6 +225,7 @@
             const index = sortedOverlaps.indexOf(event);
             left = rect.x + index * width;
         }
+        width -= (2 / (overlappingEvents.length + 1));
 
         let top = rect.y + getMinuteFraction(event.date) * rect.height;
         const height = (event.duration / 60) * rect.height;
@@ -236,6 +241,16 @@
       const delta = event.deltaY || event.wheelDeltaY || event.detail;
 
       gridDiv.scrollBy({ top: delta });
+  }
+
+  const setSelectedEvent = (event: Event): void => {
+      if (showDetails && selectedEvent.id === event.id) {
+        showDetails = false;
+        return;
+      }
+      selectedEvent = event;
+      selectedPosition = eventPositions.get(event.id);
+      showDetails = true;
   }
 
   $: morningElement, scrollToStart();
@@ -266,7 +281,7 @@
 {#if calendarMounted}
     {#each events as event}
         {#if eventPositions.has(event.id) && event.date >= weekStart && event.date < new Date(weekStart.getTime() + 7 * 24 * 60 * 60 * 1000)}
-          <div class="overflow-y-auto" on:wheel={scrollFixedElement}>
+          <div class="overflow-y-auto" on:wheel={scrollFixedElement} on:click={() => setSelectedEvent(event)}>
             <CalendarWeekEvent {event} position={eventPositions.get(event.id)}/>
           </div>
         {/if}
@@ -274,7 +289,7 @@
 {/if}
 
 <div class="mr-10 flex flex-col h-screen">
-    <div on:wheel={(e) => e.preventDefault()}>
+    <div on:wheel={(e) => e.preventDefault()} class="select-none">
         {#if weekStart.getMonth() && weekStart.getFullYear()}
             <div class="text-center text-2xl text-gray-800 mr-2 my-2">
                 {includeNextMonth ? `${monthNames[weekStart.getMonth()]} - ${monthNames[(weekStart.getMonth() + 1) % 12]}` : monthNames[weekStart.getMonth()] } {weekStart.getFullYear()}
@@ -327,6 +342,13 @@
         {/each}
     </div>
 </div>
+
+{#if showDetails}
+    <div class="mr-72">
+        <EventDetailPopup event={selectedEvent} position={selectedPosition} />
+    </div>
+{/if}
+
 
 <style>
     .hour-card {
