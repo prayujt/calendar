@@ -6,6 +6,7 @@ export interface IdpUser {
             username: string;
             firstName: string;
             lastName: string;
+            avatar: string;
         };
     };
 }
@@ -15,6 +16,7 @@ export interface User {
     name: string;
     username: string;
     email: string;
+    avatar: string;
 }
 
 export interface Event {

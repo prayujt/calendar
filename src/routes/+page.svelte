@@ -8,11 +8,12 @@
 
   onMount(async () => {
     try {
-      const test = await fetch(`https://api.calendar.prayujt.com/events`, {
+      const eventResponse  = await fetch(`https://api.calendar.prayujt.com/events`, {
         credentials: 'include',
       })
-      console.log(test);
-      console.log(await test.json());
+      const events = await eventResponse.json();
+      console.log(events);
+
       const response = await fetch(`https://idp.prayujt.com/sessions/whoami`, {
         credentials: 'include',
       });
@@ -23,6 +24,7 @@
           name: `${res.identity.traits.firstName} ${res.identity.traits.lastName}`,
           email: res.identity.traits.email,
           username: res.identity.traits.username,
+          avatar: res.identity.traits.avatar,
       } as User);
     } catch (err: any) {
       userInfo.set({
@@ -30,6 +32,7 @@
         name: 'Prayuj Tuli',
         email: 'prayujtuli@hotmail.com',
         username: 'prayujt',
+        avatar: 'https://static.prayujt.com/images/PRAYUJ.jpg'
       } as User);
     }
 
