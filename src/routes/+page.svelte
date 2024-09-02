@@ -7,13 +7,14 @@
   import CalendarWeek from '$components/CalendarWeek.svelte';
 
   onMount(async () => {
-    try {
-      const eventResponse  = await fetch(`https://api.calendar.prayujt.com/events`, {
-        credentials: 'include',
-      })
-      const events = await eventResponse.json();
-      console.log(events);
+    // const eventResponse  = await fetch(`https://api.calendar.prayujt.com/events`, {
+    //   credentials: 'include',
+    // })
+    // const events = await eventResponse.json();
+    // console.log(events);
 
+
+    try {
       const response = await fetch(`https://idp.prayujt.com/sessions/whoami`, {
         credentials: 'include',
       });
