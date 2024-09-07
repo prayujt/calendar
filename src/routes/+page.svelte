@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { commandMenuOpen, userInfo } from '$lib/stores';
+  import { commandMenuOpen, events, userInfo } from '$lib/stores';
   import type { IdpUser, User } from '$lib/types';
 
   import Sidebar from '$components/Sidebar.svelte';
@@ -41,7 +41,7 @@
     }
   });
 
-  const keyPressEvent = (event: KeyboardEvent) => {
+  const keyPressEvent = async (event: KeyboardEvent) => {
     if (event.ctrlKey && event.key === 'k') {
       event.preventDefault();
       commandMenuOpen.update((prev) => !prev);
@@ -51,7 +51,20 @@
       if (pages.length > 0) {
         const newPages = pages.slice(0, -1);
         pages = newPages;
+        value = 'create new event...';
       } else commandMenuOpen.set(false);
+    }
+    else if (event.key === 'Enter' && search && page == 'newEvent') {
+      try {
+          const eventResponse  = await fetch(`https://api.calendar.prayujt.com/events/generate`, {
+            method: 'POST',
+            body: JSON.stringify({ content: search }),
+            credentials: 'include',
+          })
+          events.update(async (prev) => [...prev, await eventResponse.json()]);
+      } catch (error) {
+          console.error('Error creating new event:', error);
+      }
     }
   };
 </script>
@@ -74,7 +87,7 @@
           bind:value={search}
           class="selection:text-white selection:bg-orange-500 text-lg mt-4 mx-3 w-[calc(100%-1.5rem)] focus:outline-none focus:border-transparent"
           style="caret-color: blue;"
-          placeholder="What do you need?"
+          placeholder={page == 'newEvent' ? "Begin typing..." : "What do you need?"}
         />
         <Command.Separator class="mt-4 border-t border-gray-200" />
         <Command.List class="">
@@ -84,7 +97,7 @@
                 </Command.Empty>
                 <Command.Group heading="Events" class="m-4 text-sm text-gray-500">
                     <Command.Item
-                      onSelect={() => pages = [...pages, 'newEvent']}
+                      onSelect={() => { pages = [...pages, 'newEvent']; search = ''; }}
                       class={`rounded-lg mt-1 -mx-1 py-3 text-md text-gray-800 ${value === 'create new event...' && 'bg-gray-100'} hover:bg-gray-100`}>
                         <div class="ml-4 flex">
                             <svg
@@ -107,29 +120,9 @@
                     </Command.Item>
                 </Command.Group>
             {:else if page == 'newEvent'}
-                <Command.Group heading="New Event" class="m-4 text-sm text-gray-500">
-                    <Command.Item
-                      class={`rounded-lg mt-1 -mx-1 py-3 text-md text-gray-800 ${value === 'create new event...' && 'bg-gray-100'} hover:bg-gray-100`}>
-                        <div class="ml-4 flex">
-                            <svg
-                              class="w-5 h-5"
-                              fill="none"
-                              shape-rendering="geometricPrecision"
-                              stroke="currentColor"
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              stroke-width="1.5"
-                              viewBox="0 0 24 24"
-                              >
-                                  <path d="M12 5v14"></path>
-                                  <path d="M5 12h14"></path>
-                            </svg>
-                            <p class="ml-2">
-                                Test
-                            </p>
-                        </div>
-                    </Command.Item>
-                </Command.Group>
+                <p class="text-md m-4 text-gray-500">
+                    Provide some details about the event you want to create.
+                </p>
             {/if}
         </Command.List>
     </div>
