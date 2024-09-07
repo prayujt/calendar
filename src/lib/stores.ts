@@ -4,3 +4,5 @@ import type { User } from "./types";
 export const commandMenuOpen = writable(false);
 
 export const userInfo = writable<User>({});
+
+export const events = writable<Event[]>([]);

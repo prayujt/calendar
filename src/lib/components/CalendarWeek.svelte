@@ -5,6 +5,7 @@
   import EventDetailPopup from './EventDetailPopup.svelte';
 
   import type { Event, EventPosition } from '$lib/types';
+  import { events } from '$lib/stores';
   import { compareDates, getTimeString, getCurrentHour, getMinuteFraction } from '$lib/utils';
 
   let dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
@@ -38,47 +39,21 @@
   let barYPosition = -1;
   let barWidth = -1;
 
-  let events = [
-    {
-      id: '1',
-      date: new Date('2024-09-05T22:30:00'),
-      title: 'Call with Sofia',
-      description: 'Discuss the new project',
-      duration: 120,
-      accepted: true
-    } as Event,
-    {
-      id: '2',
-      date: new Date('2024-09-05T13:55:00'),
-      title: 'Computer Network Fundamentals',
-      description: 'Discuss the new project',
-      duration: 120,
-      accepted: false
-    } as Event,
-    {
-      id: '3',
-      date: new Date('2024-09-05T21:00:00'),
-      title: 'Meet with Maalav and discuss the new project',
-      description: 'Discuss the new project',
-      duration: 120,
-      accepted: true
-    } as Event,
-    {
-      id: '4',
-      date: new Date('2024-09-05T17:10:00'),
-      title: 'DSA Office Hours',
-      description: 'MALA 5200 with Matthew',
-      duration: 115,
-      accepted: true
-    } as Event
-  ]
-
   let eventPositions = new Map<string, EventPosition>();
   let showDetails = false;
   let selectedEvent: Event;
   let selectedPosition: EventPosition;
 
-  onMount(() => {
+  onMount(async () => {
+      try {
+          const eventResponse  = await fetch(`https://api.calendar.prayujt.com/events`, {
+            credentials: 'include',
+          })
+          events.set(await eventResponse.json());
+      } catch (error) {
+          console.error('Error fetching events', error);
+      }
+
       getWeekDates();
       let tempHours: string[] = ['12 AM'];
       for (let i = 1; i < 12; i++) {
@@ -96,6 +71,8 @@
       setInterval(() => {
           currentTime = new Date();
       }, 60000);
+
+      calendarMounted = checkCalendarMounted();
   });
 
   onDestroy(() => {
@@ -196,7 +173,7 @@
   const generateEventPositions = (): void => {
     const newEventPositions = new Map<string, EventPosition>();
 
-    for (const event of events) {
+    for (const event of $events) {
         const dayName = dayNames[event.date.getDay()];
         if (!refs[dayName] || !refs[dayName][getTimeString(false, event.date)]) {
             newEventPositions.set(event.id, { top: 0, left: 0, height: 0, width: 0 });
@@ -207,7 +184,7 @@
         const eventStart = event.date.getTime();
         const eventEnd = eventStart + event.duration * 60 * 1000;
 
-        const overlappingEvents = events.filter(otherEvent => {
+        const overlappingEvents = $events.filter(otherEvent => {
             if (otherEvent === event) return false;
             const otherEventStart = otherEvent.date.getTime();
             const otherEventEnd = otherEventStart + otherEvent.duration * 60 * 1000;
@@ -254,7 +231,7 @@
   }
 
   $: morningElement, scrollToStart();
-  $: refs, currentTime, calendarMounted, updatePositions();
+  $: refs, currentTime, calendarMounted, $events, updatePositions();
   $: refs, calendarMounted = checkCalendarMounted();
   $: refs, gridDiv, generateEventPositions();
 </script>
@@ -279,7 +256,7 @@
 {/if}
 
 {#if calendarMounted}
-    {#each events as event}
+    {#each $events as event}
         {#if eventPositions.has(event.id) && event.date >= weekStart && event.date < new Date(weekStart.getTime() + 7 * 24 * 60 * 60 * 1000)}
           <div class="overflow-y-auto" on:wheel={scrollFixedElement} on:click={() => setSelectedEvent(event)}>
             <CalendarWeekEvent {event} position={eventPositions.get(event.id)}/>
