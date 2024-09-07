@@ -14,6 +14,9 @@
   let pages: string[] = [];
   let page: string | undefined = undefined;
 
+  let eventGenerationLoading = false;
+  let eventGenerationError = false;
+
   $: page = pages[pages.length - 1]
 
   onMount(async () => {
@@ -54,16 +57,26 @@
         value = 'create new event...';
       } else commandMenuOpen.set(false);
     }
-    else if (event.key === 'Enter' && search && page == 'newEvent') {
-      try {
-          const eventResponse  = await fetch(`https://api.calendar.prayujt.com/events/generate`, {
-            method: 'POST',
-            body: JSON.stringify({ content: search }),
-            credentials: 'include',
-          })
-          events.update(async (prev) => [...prev, await eventResponse.json()]);
-      } catch (error) {
-          console.error('Error creating new event:', error);
+    else if (search && page == 'newEvent') {
+      eventGenerationError = false;
+      if (event.key === 'Enter') {
+          eventGenerationLoading = true;
+          try {
+              const eventResponse  = await fetch(`https://api.calendar.prayujt.com/events/generate`, {
+                method: 'POST',
+                body: JSON.stringify({ content: search }),
+                credentials: 'include',
+              })
+              events.update(async (prev) => [...prev, await eventResponse.json()]);
+              commandMenuOpen.set(false);
+              pages = [];
+              search = '';
+              eventGenerationLoading = false;
+          } catch (error) {
+              console.error('Error creating new event:', error);
+              eventGenerationLoading = false;
+              eventGenerationError = true;
+          }
       }
     }
   };
@@ -123,6 +136,22 @@
                 <p class="text-md m-4 text-gray-500">
                     Provide some details about the event you want to create.
                 </p>
+                {#if eventGenerationLoading}
+                    <div class="flex flex-col justify-center items-center h-40">
+                        <p class='text-gray-500 text-md mb-6'>Generating event...</p>
+                        <div class='flex space-x-2 justify-center items-center'>
+                            <div class='h-4 w-4 bg-blue-400 rounded-full animate-bounce [animation-delay:-0.3s]'></div>
+                            <div class='h-4 w-4 bg-blue-400 rounded-full animate-bounce [animation-delay:-0.15s]'></div>
+                            <div class='h-4 w-4 bg-blue-400 rounded-full animate-bounce'></div>
+                        </div>
+                    </div>
+                {/if}
+                {#if eventGenerationError}
+                    <div class="flex flex-col items-center mt-12">
+                        <p class='text-red-500 text-md mb-6'>There was an error...</p>
+                        <p class='text-gray-500 text-md'>Please try again</p>
+                    </div>
+                {/if}
             {/if}
         </Command.List>
     </div>

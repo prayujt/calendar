@@ -52,6 +52,40 @@
           const eventsJson = await eventResponse.json();
           events.set(eventsJson.map((eventJson: any) => convertToEvent(eventJson)));
       } catch (error) {
+          events.set([
+            {
+              id: '1',
+              date: new Date('2024-09-05T22:30:00'),
+              title: 'Call with Sofia',
+              description: 'Discuss the new project',
+              duration: 120,
+              accepted: true
+            } as Event,
+            {
+              id: '2',
+              date: new Date('2024-09-05T13:55:00'),
+              title: 'Computer Network Fundamentals',
+              description: 'Discuss the new project',
+              duration: 120,
+              accepted: false
+            } as Event,
+            {
+              id: '3',
+              date: new Date('2024-09-05T21:00:00'),
+              title: 'Meet with Maalav and discuss the new project',
+              description: 'Discuss the new project',
+              duration: 120,
+              accepted: true
+            } as Event,
+            {
+              id: '4',
+              date: new Date('2024-09-05T17:10:00'),
+              title: 'DSA Office Hours',
+              description: 'MALA 5200 with Matthew',
+              duration: 115,
+              accepted: true
+            } as Event
+          ]);
           console.error('Error fetching events', error);
       }
 
