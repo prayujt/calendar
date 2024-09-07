@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { commandMenuOpen, events, userInfo } from '$lib/stores';
   import type { IdpUser, User } from '$lib/types';
+  import { convertToEvent } from '$lib/utils';
 
   import Sidebar from '$components/Sidebar.svelte';
   import CalendarWeek from '$components/CalendarWeek.svelte';
@@ -68,7 +69,7 @@
                 credentials: 'include',
               })
               const eventJson = await eventResponse.json();
-              events.set([...$events, eventJson]);
+              events.set([...$events, convertToEvent(eventJson)]);
               commandMenuOpen.set(false);
               pages = [];
               search = '';
