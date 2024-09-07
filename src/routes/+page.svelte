@@ -67,7 +67,8 @@
                 body: JSON.stringify({ content: search }),
                 credentials: 'include',
               })
-              events.update(async (prev) => [...prev, await eventResponse.json()]);
+              const eventJson = await eventResponse.json();
+              events.set([...$events, eventJson]);
               commandMenuOpen.set(false);
               pages = [];
               search = '';
