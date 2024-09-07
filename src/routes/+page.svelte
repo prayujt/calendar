@@ -73,6 +73,7 @@
               commandMenuOpen.set(false);
               pages = [];
               search = '';
+              value = 'create new event...';
               eventGenerationLoading = false;
           } catch (error) {
               console.error('Error creating new event:', error);
