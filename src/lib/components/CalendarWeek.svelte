@@ -6,7 +6,7 @@
 
   import type { Event, EventPosition } from '$lib/types';
   import { events } from '$lib/stores';
-  import { compareDates, getTimeString, getCurrentHour, getMinuteFraction } from '$lib/utils';
+  import { compareDates, convertToEvent, getTimeString, getCurrentHour, getMinuteFraction } from '$lib/utils';
 
   let dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
   let monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -49,7 +49,8 @@
           const eventResponse  = await fetch(`https://api.calendar.prayujt.com/events`, {
             credentials: 'include',
           })
-          events.set(await eventResponse.json());
+          const eventsJson = await eventResponse.json();
+          events.set(eventsJson.map((eventJson: any) => convertToEvent(eventJson)));
       } catch (error) {
           console.error('Error fetching events', error);
       }

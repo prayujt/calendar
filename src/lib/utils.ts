@@ -46,3 +46,13 @@ export const compareDates = (date1: Date, date2: Date): boolean =>
     date1.getFullYear() === date2.getFullYear() &&
     date1.getMonth() === date2.getMonth() &&
     date1.getDate() === date2.getDate();
+
+/**
+ * Converts an ISO string event payload to an Event object
+ */
+export const convertToEvent = (event: any): Event => {
+    return {
+        ...event,
+        date: new Date(event.date),
+    } as Event;
+};
