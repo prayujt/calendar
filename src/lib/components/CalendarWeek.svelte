@@ -5,8 +5,10 @@
   import EventDetailPopup from './EventDetailPopup.svelte';
 
   import type { Event, EventPosition } from '$lib/types';
-  import { events } from '$lib/stores';
-  import { compareDates, convertToEvent, getTimeString, getCurrentHour, getMinuteFraction } from '$lib/utils';
+  import { calendars, events, outsideClick, selectedEvent, selectedPosition, showEventDetails } from '$lib/stores';
+  import { clickOutside, compareDates, convertToEvent, getTimeString, getCurrentHour, getMinuteFraction } from '$lib/utils';
+  import { API_HOST } from '$lib/vars';
+
 
   let dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
   let monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -40,13 +42,16 @@
   let barWidth = -1;
 
   let eventPositions = new Map<string, EventPosition>();
-  let showDetails = false;
-  let selectedEvent: Event;
-  let selectedPosition: EventPosition;
 
   onMount(async () => {
       try {
-          const eventResponse  = await fetch(`https://api.calendar.prayujt.com/events`, {
+          const calendarResponse = await fetch(`${API_HOST}/calendars`, {
+            credentials: 'include',
+          });
+          const calendarJson = await calendarResponse.json();
+          calendars.set(calendarJson);
+
+          const eventResponse  = await fetch(`${API_HOST}/events`, {
             credentials: 'include',
           })
           const eventsJson = await eventResponse.json();
@@ -248,21 +253,29 @@
     eventPositions = newEventPositions;
   };
 
+  /**
+   * Scrolls the gridDiv element by the deltaY value of the event
+   * @param event - the wheel event
+   */
   const scrollFixedElement = (event: WheelEvent): void => {
       event.preventDefault();
       const delta = event.deltaY || event.wheelDeltaY || event.detail;
 
-      gridDiv.scrollBy({ top: delta });
+      if (!$showEventDetails) gridDiv.scrollBy({ top: delta });
   }
 
+  /**
+   * Sets the selected event and its position
+   * @param event - the event that was clicked
+   */
   const setSelectedEvent = (event: Event): void => {
-      if (showDetails && selectedEvent.id === event.id) {
-        showDetails = false;
-        return;
+      if ($selectedEvent && $selectedEvent.id === event.id) {
+          showEventDetails.update((value) => !value);
+          return;
       }
-      selectedEvent = event;
-      selectedPosition = eventPositions.get(event.id);
-      showDetails = true;
+      selectedEvent.set(event);
+      selectedPosition.set(eventPositions.get(event.id));
+    showEventDetails.set(true);
   }
 
   $: morningElement, scrollToStart();
@@ -330,7 +343,7 @@
         </div>
     </div>
 
-    <div class="no-scrollbar flex-1 overflow-auto overscroll-none" bind:this={gridDiv} on:scroll={updatePositions}>
+    <div class={`no-scrollbar flex-1 overscroll-none ${$showEventDetails ? 'overflow-hidden' : 'overflow-auto'}`} bind:this={gridDiv} on:scroll={updatePositions}>
         {#each hours as hour}
             <div class="flex">
                 {#if hour === '8 AM'}
@@ -355,9 +368,9 @@
     </div>
 </div>
 
-{#if showDetails}
-    <div class="mr-72">
-        <EventDetailPopup event={selectedEvent} position={selectedPosition} />
+{#if $showEventDetails}
+    <div class="mr-72" use:clickOutside on:clickOutside={() => { showEventDetails.set(false); }}>
+        <EventDetailPopup {gridDiv} />
     </div>
 {/if}
 

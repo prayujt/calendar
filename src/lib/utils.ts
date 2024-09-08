@@ -26,6 +26,17 @@ export const getTimeString = (
 };
 
 /**
+ * Get the current date as a string formatted (e.g. "Wednesday, September 1, 2021")
+ */
+export const getDateString = (date: Date = new Date()): string =>
+    new Intl.DateTimeFormat("en-US", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+    }).format(date);
+
+/**
  * Get the time range of the specified date and duration in the format "start - end"
  * @param startDate The start date of the time range
  * @param duration The duration of the time range in minutes
@@ -55,4 +66,23 @@ export const convertToEvent = (event: any): Event => {
         ...event,
         date: new Date(event.date),
     } as Event;
+};
+
+/**
+ * Utility function for creating a custom event listener that listens for clicks outside of a specified node
+ */
+export const clickOutside = (node) => {
+    const handleClick = (event) => {
+        if (node && !node.contains(event.target) && !event.defaultPrevented) {
+            node.dispatchEvent(new CustomEvent("clickOutside", node));
+        }
+    };
+
+    document.addEventListener("click", handleClick, true);
+
+    return {
+        destroy() {
+            document.removeEventListener("click", handleClick, true);
+        },
+    };
 };

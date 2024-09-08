@@ -3,6 +3,7 @@
   import { commandMenuOpen, events, userInfo } from '$lib/stores';
   import type { IdpUser, User } from '$lib/types';
   import { convertToEvent } from '$lib/utils';
+  import { API_HOST } from '$lib/vars';
 
   import Sidebar from '$components/Sidebar.svelte';
   import CalendarWeek from '$components/CalendarWeek.svelte';
@@ -63,7 +64,7 @@
       if (event.key === 'Enter') {
           eventGenerationLoading = true;
           try {
-              const eventResponse  = await fetch(`https://api.calendar.prayujt.com/events/generate`, {
+              const eventResponse  = await fetch(`${API_HOST}/events/generate`, {
                 method: 'POST',
                 body: JSON.stringify({ content: search }),
                 credentials: 'include',

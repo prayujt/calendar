@@ -19,8 +19,16 @@ export interface User {
     avatar: string;
 }
 
+export interface Calendar {
+    id: string;
+    name: string;
+    color: string;
+    isDefault: boolean;
+}
+
 export interface Event {
     id: string;
+    calendarId: string;
     date: Date;
     title: string;
     description: string;
