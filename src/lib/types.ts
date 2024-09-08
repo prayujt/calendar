@@ -42,3 +42,12 @@ export interface EventPosition {
     width: number;
     height: number;
 }
+
+export interface Task {
+    id: string;
+    calendarId: string;
+    title: string;
+    description: string;
+    completed: boolean;
+    deadline: Date;
+}

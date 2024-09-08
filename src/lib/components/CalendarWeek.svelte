@@ -324,11 +324,11 @@
         {#each hours as hour}
             <div class="flex">
                 {#if hour === '8 AM'}
-                  <div class="text-xs text-gray-600 -mt-1 mr-2 ml-2 w-16 text-center" bind:this={morningElement}>
+                  <div class="text-xs text-gray-600 -mt-1 mr-2 ml-2 w-16 text-center select-none" bind:this={morningElement}>
                       {hour}
                   </div>
                 {:else}
-                  <div class="text-xs text-gray-600 -mt-1 mr-2 ml-2 w-16 text-center">
+                  <div class="text-xs text-gray-600 -mt-1 mr-2 ml-2 w-16 text-center select-none">
                       {hour}
                   </div>
                 {/if}

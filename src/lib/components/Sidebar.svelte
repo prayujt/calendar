@@ -2,6 +2,8 @@
     import { calendars, selectedCalendars, userInfo } from '$lib/stores';
     import { getCalendarsArray } from '$lib/utils';
 
+    import SidebarTasks from './SidebarTasks.svelte';
+
     let isLoaded = false;
 
     const toggleCalendar = (id: string) => {
@@ -16,8 +18,8 @@
     ]));
 </script>
 
-<aside class="shadow h-screen bg-slate-100 z-50 overflow-hidden" on:wheel={(e) => e.preventDefault()}>
-    <div class="mt-10 flex flex-col items-center p-1.5">
+<aside class="flex justify-center shadow h-screen bg-slate-100 z-50 overflow-hidden" on:wheel={(e) => e.preventDefault()}>
+    <div class="mt-10 flex flex-col items-center p-1.5 w-full">
         <div class="mb-5">
             {#if $userInfo.avatar}
                 {#if !isLoaded}
@@ -51,15 +53,17 @@
             {/if}
         </div>
 
-        <div class="flex flex-col items-center">
-            <h2 class="text-md mb-2">Calendars</h2>
+        <SidebarTasks />
+
+        <div class="flex flex-col items-center mt-auto mb-4">
+            <p class="text-sm text-gray-600 mb-2 select-none">Calendars</p>
             {#each getCalendarsArray() as calendar}
                 <div class="text-center min-w-28 max-w-36 mb-2">
                     <div
                         class={`${$selectedCalendars.has(calendar.id) ? 'bg-blue-600 text-white' : 'bg-gray-200 text-black'} rounded-md cursor-pointer select-none transition-colors duration-250 ease-in-out px-2 py-1`}
                         on:click={() => toggleCalendar(calendar.id)}
                     >
-                        <p>{calendar.isDefault ? 'Personal' : calendar.name}</p>
+                        <p>{calendar.name}</p>
                     </div>
                 </div>
             {/each}

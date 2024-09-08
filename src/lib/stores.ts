@@ -1,5 +1,5 @@
 import { writable } from "svelte/store";
-import type { User } from "./types";
+import type { Task, User } from "./types";
 
 export const commandMenuOpen = writable(false);
 
@@ -11,6 +11,8 @@ export const calendars = writable<Map<string, Calendar>>(
 export const selectedCalendars = writable<Set<string>>(new Set<string>());
 
 export const events = writable<Event[]>([]);
+
+export const tasks = writable<Task[]>([]);
 
 export const showEventDetails = writable(false);
 export const selectedEvent = writable<Event>(undefined);
