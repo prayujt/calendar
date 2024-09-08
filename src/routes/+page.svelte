@@ -10,6 +10,8 @@
 
   import { Command } from 'cmdk-sv';
 
+  import { fade } from 'svelte/transition';
+
   let search = '';
   let value = 'create new event...';
 
@@ -49,6 +51,8 @@
   const keyPressEvent = async (event: KeyboardEvent) => {
     if (event.ctrlKey && event.key === 'k') {
       event.preventDefault();
+      value = 'create new event...'
+      pages = [];
       commandMenuOpen.update((prev) => !prev);
     }
     else if (event.key === 'Escape' || (event.key === 'Backspace' && !search)) {

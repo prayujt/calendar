@@ -4,8 +4,8 @@
   import CalendarWeekEvent from './CalendarWeekEvent.svelte';
   import EventDetailPopup from './EventDetailPopup.svelte';
 
-  import type { Event, EventPosition } from '$lib/types';
-  import { calendars, events, outsideClick, selectedEvent, selectedPosition, showEventDetails } from '$lib/stores';
+  import type { Calendar, Event, EventPosition } from '$lib/types';
+  import { calendars, events, selectedEvent, selectedPosition, showEventDetails } from '$lib/stores';
   import { clickOutside, compareDates, convertToEvent, getTimeString, getCurrentHour, getMinuteFraction } from '$lib/utils';
   import { API_HOST } from '$lib/vars';
 
@@ -49,7 +49,14 @@
             credentials: 'include',
           });
           const calendarJson = await calendarResponse.json();
-          calendars.set(calendarJson);
+          const calendarMap = new Map<string, any>();
+          // index the calendars by id
+          calendars.set(
+              calendarJson.reduce((acc: Map<string, Calendar>, calendar: Calendar) => {
+                acc.set(calendar.id, calendar);
+                return acc;
+              }, calendarMap)
+          );
 
           const eventResponse  = await fetch(`${API_HOST}/events`, {
             credentials: 'include',
@@ -57,40 +64,6 @@
           const eventsJson = await eventResponse.json();
           events.set(eventsJson.map((eventJson: any) => convertToEvent(eventJson)));
       } catch (error) {
-          events.set([
-            {
-              id: '1',
-              date: new Date('2024-09-05T22:30:00'),
-              title: 'Call with Sofia',
-              description: 'Discuss the new project',
-              duration: 120,
-              accepted: true
-            } as Event,
-            {
-              id: '2',
-              date: new Date('2024-09-05T13:55:00'),
-              title: 'Computer Network Fundamentals',
-              description: 'Discuss the new project',
-              duration: 120,
-              accepted: false
-            } as Event,
-            {
-              id: '3',
-              date: new Date('2024-09-05T21:00:00'),
-              title: 'Meet with Maalav and discuss the new project',
-              description: 'Discuss the new project',
-              duration: 120,
-              accepted: true
-            } as Event,
-            {
-              id: '4',
-              date: new Date('2024-09-05T17:10:00'),
-              title: 'DSA Office Hours',
-              description: 'MALA 5200 with Matthew',
-              duration: 115,
-              accepted: true
-            } as Event
-          ]);
           console.error('Error fetching events', error);
       }
 
@@ -145,6 +118,7 @@
 
     const tempWeekStart = new Date(today);
     tempWeekStart.setDate(today.getDate() - day);
+    tempWeekStart.setHours(0, 0, 0, 0);
     weekStart = tempWeekStart;
 
     const tempWeekDates = [];
@@ -212,6 +186,7 @@
    */
   const generateEventPositions = (): void => {
     const newEventPositions = new Map<string, EventPosition>();
+    const eventSlots = new Map<string, Event[]>();
 
     for (const event of $events) {
         const dayName = dayNames[event.date.getDay()];
@@ -220,34 +195,36 @@
             continue;
         }
 
-        const rect = refs[dayName][getTimeString(false, event.date)].getBoundingClientRect();
-        const eventStart = event.date.getTime();
-        const eventEnd = eventStart + event.duration * 60 * 1000;
-
-        const overlappingEvents = $events.filter(otherEvent => {
-            if (otherEvent === event) return false;
-            const otherEventStart = otherEvent.date.getTime();
-            const otherEventEnd = otherEventStart + otherEvent.duration * 60 * 1000;
-
-            return (eventStart < otherEventEnd && eventEnd > otherEventStart);
-        });
-
-        let width = rect.width;
-        let left = rect.x;
-
-        if (overlappingEvents.length > 0) {
-            width = rect.width / (overlappingEvents.length + 1);
-            // Sort overlapping events by start time to ensure proper side-by-side positioning
-            const sortedOverlaps = [event, ...overlappingEvents].sort((a, b) => a.date.getTime() - b.date.getTime());
-            const index = sortedOverlaps.indexOf(event);
-            left = rect.x + index * width;
+        const timeSlotKey = `${dayName}-${event.date.getTime()}`;
+        if (!eventSlots.has(timeSlotKey)) {
+            eventSlots.set(timeSlotKey, []);
         }
-        width -= (2 / (overlappingEvents.length + 1));
+        eventSlots.get(timeSlotKey)!.push(event);
+    }
 
-        let top = rect.y + getMinuteFraction(event.date) * rect.height;
-        const height = (event.duration / 60) * rect.height;
+    for (const [timeSlotKey, eventsInSlot] of eventSlots) {
+        const dayName = timeSlotKey.split('-')[0];
+        const events = eventsInSlot;
+        const rect = refs[dayName][getTimeString(false, new Date(parseInt(timeSlotKey.split('-')[1])))]?.getBoundingClientRect();
 
-        newEventPositions.set(event.id, { top, left, height, width });
+        if (!rect) continue;
+
+        events.sort((a, b) => (b.duration - a.duration));
+
+        const numEvents = events.length;
+        // subtracting 2 to allow for 1 px left and right
+        const width = (rect.width - 2) / numEvents;
+        const baseLeft = rect.x;
+
+        // need to fix calculation here to only take away from left and right most events
+        for (let i = 0; i < numEvents; i++) {
+            const event = events[i];
+            const left = baseLeft + i * width + (1 / numEvents);
+            const top = rect.y + getMinuteFraction(event.date) * rect.height;
+            const height = (event.duration / 60) * rect.height;
+
+            newEventPositions.set(event.id, { top, left, height, width });
+        }
     }
 
     eventPositions = newEventPositions;
