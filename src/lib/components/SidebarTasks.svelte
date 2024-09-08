@@ -5,6 +5,7 @@
     import { selectedCalendars, tasks } from '../stores';
     import { getDateString, getTimeString } from '../utils';
 
+    let displayedTasks: Task[];
     onMount(() => {
         tasks.set([
             {
@@ -22,50 +23,65 @@
                 deadline: new Date('2024-09-24'),
             },
             {
-                id: '2',
+                id: '3',
                 calendarId: '70e3c9da-e063-4306-8663-8ec3718b001a',
                 title: 'Finish iOS bugs before release',
                 description: 'Issues with the timeline page',
                 deadline: new Date('2024-09-24'),
             },
             {
-                id: '2',
+                id: '4',
                 calendarId: '70e3c9da-e063-4306-8663-8ec3718b001a',
                 title: 'Finish iOS bugs before release',
                 description: 'Issues with the timeline page',
                 deadline: new Date('2024-09-24'),
             },
             {
-                id: '2',
+                id: '5',
                 calendarId: '70e3c9da-e063-4306-8663-8ec3718b001a',
                 title: 'Finish iOS bugs before release',
                 description: 'Issues with the timeline page',
                 deadline: new Date('2024-09-24'),
             },
             {
-                id: '2',
+                id: '6',
                 calendarId: '70e3c9da-e063-4306-8663-8ec3718b001a',
                 title: 'Finish iOS bugs before release',
                 description: 'Issues with the timeline page',
                 deadline: new Date('2024-09-24'),
             },
             {
-                id: '2',
+                id: '7',
                 calendarId: '70e3c9da-e063-4306-8663-8ec3718b001a',
                 title: 'Finish iOS bugs before release',
                 description: 'Issues with the timeline page',
                 deadline: new Date('2024-09-24'),
             },
             {
-                id: '2',
+                id: '8',
                 calendarId: '70e3c9da-e063-4306-8663-8ec3718b001a',
                 title: 'Finish iOS bugs before release',
                 description: 'Issues with the timeline page',
                 deadline: new Date('2024-09-24'),
             },
-
+            {
+                id: '9',
+                calendarId: 'e2b95734-9689-4995-9bf2-38741e871d53',
+                title: 'Finish CNT4007 Homework',
+                description: 'Big assignment, need to start early',
+                deadline: new Date(),
+            },
+            {
+                id: '10',
+                calendarId: '390c5ec0-796c-4811-a652-8e6f4dd90d32',
+                title: 'Finish iOS bugs before release',
+                description: 'Issues with the timeline page',
+                deadline: new Date('2024-09-24'),
+            },
         ])
     });
+
+    $: displayedTasks = $tasks.filter(task => $selectedCalendars.has(task.calendarId));
 </script>
 
 <div class="flex flex-col items-center mb-4 w-full h-full">
@@ -74,6 +90,15 @@
         class="no-scrollbar border-2 border-bg-gray-600 rounded-lg shadow-lg w-full h-[30rem] overflow-y-auto"
         on:wheel={(e) => e.stopPropagation()}
     >
+        {#if displayedTasks.length === 0}
+            <p
+              class="mt-4 text-center text-sm text-gray-600 m-2"
+              transition:fade={{duration: 200}}
+            >
+                No tasks to show
+            </p>
+        {/if}
+
         {#each $tasks as task}
             {#if $selectedCalendars.has(task.calendarId)}
                 <div
