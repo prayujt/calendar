@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { commandMenuOpen, events, userInfo } from '$lib/stores';
-  import type { IdpUser, User } from '$lib/types';
+  import { calendars, commandMenuOpen, events, userInfo } from '$lib/stores';
+  import type { Calendar, IdpUser, User } from '$lib/types';
   import { convertToEvent } from '$lib/utils';
   import { API_HOST } from '$lib/vars';
 
@@ -9,8 +9,6 @@
   import CalendarWeek from '$components/CalendarWeek.svelte';
 
   import { Command } from 'cmdk-sv';
-
-  import { fade } from 'svelte/transition';
 
   let search = '';
   let value = 'create new event...';
@@ -68,9 +66,13 @@
       if (event.key === 'Enter') {
           eventGenerationLoading = true;
           try {
+              const defaultCalendar: Calendar = Array.from($calendars.values()).find((calendar) => calendar.isDefault)
               const eventResponse  = await fetch(`${API_HOST}/events/generate`, {
                 method: 'POST',
-                body: JSON.stringify({ content: search }),
+                body: JSON.stringify({
+                  content: search,
+                  calendarId: defaultCalendar?.id,
+                }),
                 credentials: 'include',
               })
               const eventJson = await eventResponse.json();
