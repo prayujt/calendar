@@ -5,7 +5,11 @@ export const commandMenuOpen = writable(false);
 
 export const userInfo = writable<User>({});
 
-export const calendars = writable<Record<string, Calendar>>({});
+export const calendars = writable<Map<string, Calendar>>(
+    new Map<string, Calendar>(),
+);
+export const selectedCalendars = writable<Set<string>>(new Set<string>());
+
 export const events = writable<Event[]>([]);
 
 export const showEventDetails = writable(false);

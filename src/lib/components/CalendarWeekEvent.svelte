@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { fade } from 'svelte/transition';
 
   import type { Event, EventPosition } from '$lib/types';
   import { getTimeRange } from '$lib/utils';
@@ -7,11 +7,11 @@
 
   export let event: Event;
   export let position: EventPosition;
-
-  onMount(() => {});
 </script>
 
-<div class="fixed" style="top: {position.top}px; left: {position.left}px">
+<div class="fixed" transition:fade={{duration: 250}}
+     style="top: {position.top}px; left: {position.left}px"
+>
   <div
     style="height: {position.height}px; width: {position.width}px; background-color: {event.accepted ? $calendars.get(event.calendarId).color : 'white'};"
     class={`shadow-lg cursor-pointer transition-fade fixed rounded-md border overflow-hidden z-20 select-none`}

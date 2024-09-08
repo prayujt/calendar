@@ -20,7 +20,7 @@
     visible = false;
     setTimeout(() => {
       visible = true;
-    }, 50);
+    }, 75);
     const temp = $selectedPosition.top - height / 4;
     if (temp + height > gridDiv.getBoundingClientRect().bottom)
       return gridDiv.getBoundingClientRect().bottom - height - 10;
@@ -57,7 +57,7 @@
   style="top: {top}px; left: {left}px;"
   bind:this={component}
   in:fade={{ duration: 100 }}
-  out:fade={{ duration: 50 }}
+  out:fade={{ duration: 75 }}
   class:invisible={!visible}
 >
     <div class="flex flex-col h-full">

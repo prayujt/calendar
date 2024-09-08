@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { calendars, commandMenuOpen, events, userInfo } from '$lib/stores';
   import type { Calendar, IdpUser, User } from '$lib/types';
-  import { convertToEvent } from '$lib/utils';
+  import { convertToEvent, getCalendarsArray } from '$lib/utils';
   import { API_HOST } from '$lib/vars';
 
   import Sidebar from '$components/Sidebar.svelte';
@@ -15,6 +15,8 @@
 
   let pages: string[] = [];
   let page: string | undefined = undefined;
+
+  let selectedCalendarId = '';
 
   let eventGenerationLoading = false;
   let eventGenerationError = false;
@@ -49,7 +51,7 @@
   const keyPressEvent = async (event: KeyboardEvent) => {
     if (event.ctrlKey && event.key === 'k') {
       event.preventDefault();
-      value = 'create new event...'
+      value = '0';
       pages = [];
       commandMenuOpen.update((prev) => !prev);
     }
@@ -58,20 +60,31 @@
       if (pages.length > 0) {
         const newPages = pages.slice(0, -1);
         pages = newPages;
-        value = 'create new event...';
+        value = '0';
       } else commandMenuOpen.set(false);
     }
-    else if (search && page == 'newEvent') {
+    else if (page == 'newEvent') {
+      if (event.ctrlKey && event.key === 'j') {
+        event.preventDefault();
+        const val = parseInt(value);
+        value = ((val + 1) % getCalendarsArray().length).toString();
+      }
+    }
+    else if (search && page == 'createEvent') {
       eventGenerationError = false;
       if (event.key === 'Enter') {
           eventGenerationLoading = true;
           try {
+            if (!selectedCalendarId) {
               const defaultCalendar: Calendar = Array.from($calendars.values()).find((calendar) => calendar.isDefault)
-              const eventResponse  = await fetch(`${API_HOST}/events/generate`, {
+              selectedCalendarId = defaultCalendar.id;
+            }
+
+            const eventResponse  = await fetch(`${API_HOST}/events/generate`, {
                 method: 'POST',
                 body: JSON.stringify({
                   content: search,
-                  calendarId: defaultCalendar?.id,
+                  calendarId: selectedCalendarId,
                 }),
                 credentials: 'include',
               })
@@ -80,7 +93,7 @@
               commandMenuOpen.set(false);
               pages = [];
               search = '';
-              value = 'create new event...';
+              value = '0';
               eventGenerationLoading = false;
           } catch (error) {
               console.error('Error creating new event:', error);
@@ -90,6 +103,7 @@
       }
     }
   };
+
 </script>
 
 <svelte:head>
@@ -110,7 +124,7 @@
           bind:value={search}
           class="selection:text-white selection:bg-orange-500 text-lg mt-4 mx-3 w-[calc(100%-1.5rem)] focus:outline-none focus:border-transparent"
           style="caret-color: blue;"
-          placeholder={page == 'newEvent' ? "Begin typing..." : "What do you need?"}
+          placeholder={page == 'createEvent' ? "Begin typing..." : "What do you need?"}
         />
         <Command.Separator class="mt-4 border-t border-gray-200" />
         <Command.List class="">
@@ -120,8 +134,10 @@
                 </Command.Empty>
                 <Command.Group heading="Events" class="m-4 text-sm text-gray-500">
                     <Command.Item
-                      onSelect={() => { pages = [...pages, 'newEvent']; search = ''; }}
-                      class={`rounded-lg mt-1 -mx-1 py-3 text-md text-gray-800 ${value === 'create new event...' && 'bg-gray-100'} hover:bg-gray-100`}>
+                      onSelect={() => { pages = [...pages, 'newEvent']; search = ''; value = '0'; }}
+                      class={`rounded-lg mt-1 -mx-1 py-3 text-md text-gray-800 ${value === '0' && 'bg-gray-100'} hover:bg-gray-100`}
+                      value="0"
+                      >
                         <div class="ml-4 flex">
                             <svg
                               class="w-5 h-5"
@@ -143,6 +159,39 @@
                     </Command.Item>
                 </Command.Group>
             {:else if page == 'newEvent'}
+                <p class="text-md m-4 text-gray-500">
+                    Select the calendar you want to create the event in.
+                </p>
+                <Command.Group heading="Calendars" class="m-4 text-sm text-gray-500">
+                    {#each getCalendarsArray() as calendar, index}
+                        <Command.Item
+                          onSelect={() => { pages = [...pages, 'createEvent']; search = ''; selectedCalendarId = calendar.id; }}
+                          class={`rounded-lg mt-1 -mx-1 py-3 text-md text-gray-800 ${value === index.toString() && 'bg-gray-100'} hover:bg-gray-100`}
+                          value={index.toString()}
+                          >
+                            <div class="ml-4 flex">
+                                <svg
+                                  class="w-5 h-5"
+                                  fill="none"
+                                  shape-rendering="geometricPrecision"
+                                  stroke="currentColor"
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  stroke-width="1.5"
+                                  viewBox="0 0 24 24"
+                                  >
+                                      <path d="M12 5v14"></path>
+                                      <path d="M5 12h14"></path>
+                                </svg>
+                                <p class="ml-2">
+                                    {calendar.name}
+                                </p>
+                            </div>
+                        </Command.Item>
+                    {/each}
+                </Command.Group>
+
+            {:else if page == 'createEvent'}
                 <p class="text-md m-4 text-gray-500">
                     Provide some details about the event you want to create.
                 </p>

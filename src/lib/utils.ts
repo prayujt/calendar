@@ -1,3 +1,7 @@
+import { get } from "svelte/store";
+
+import { calendars } from "./stores";
+
 /**
  * Get the current hour
  */
@@ -85,4 +89,14 @@ export const clickOutside = (node) => {
             document.removeEventListener("click", handleClick, true);
         },
     };
+};
+
+/**
+ * Utility function for creating an array from the calendars map
+ * @returns An array of calendars with the personal calendar first
+ */
+export const getCalendarsArray = () => {
+    return Array.from(get(calendars).values()).sort((a, b) =>
+        a.name === "Personal" ? -1 : b.name === "Personal" ? 1 : 0,
+    );
 };

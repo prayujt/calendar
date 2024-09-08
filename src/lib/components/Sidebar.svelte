@@ -1,10 +1,22 @@
 <script lang="ts">
-  import { userInfo } from '$lib/stores';
+    import { calendars, selectedCalendars, userInfo } from '$lib/stores';
+    import { getCalendarsArray } from '$lib/utils';
 
-  let isLoaded = false;
+    let isLoaded = false;
+
+    const toggleCalendar = (id: string) => {
+        const tempSelected = new Set($selectedCalendars);
+        if (tempSelected.has(id)) tempSelected.delete(id);
+        else tempSelected.add(id);
+        selectedCalendars.set(tempSelected);
+    };
+
+    $: $calendars, selectedCalendars.set(new Set<string>([
+        ...$calendars.keys(),
+    ]));
 </script>
 
-<aside class="shadow h-screen bg-slate-50 z-50 overflow-hidden" on:wheel={(e) => e.preventDefault()}>
+<aside class="shadow h-screen bg-slate-100 z-50 overflow-hidden" on:wheel={(e) => e.preventDefault()}>
     <div class="mt-10 flex flex-col items-center p-1.5">
         <div class="mb-5">
             {#if $userInfo.avatar}
@@ -29,12 +41,28 @@
                 </div>
             {/if}
         </div>
-        {#if $userInfo.name}
-            <p>{$userInfo.name}</p>
-            <p class="mt-2 text-gray-600">@{$userInfo.username}</p>
-        {:else}
-            <div class="animate-pulse bg-gray-300 h-4 rounded w-1/2 mb-2"></div>
-            <div class="bg-gray-300 h-4 rounded w-1/3"></div>
-        {/if}
+        <div class="mb-8">
+            {#if $userInfo.name}
+                <p>{$userInfo.name}</p>
+                <p class="mt-2 text-gray-600">@{$userInfo.username}</p>
+            {:else}
+                <div class="animate-pulse bg-gray-300 h-4 rounded w-1/2 mb-2"></div>
+                <div class="bg-gray-300 h-4 rounded w-1/3"></div>
+            {/if}
+        </div>
+
+        <div class="flex flex-col items-center">
+            <h2 class="text-md mb-2">Calendars</h2>
+            {#each getCalendarsArray() as calendar}
+                <div class="text-center min-w-28 max-w-36 mb-2">
+                    <div
+                        class={`${$selectedCalendars.has(calendar.id) ? 'bg-blue-600 text-white' : 'bg-gray-200 text-black'} rounded-md cursor-pointer select-none transition-colors duration-250 ease-in-out px-2 py-1`}
+                        on:click={() => toggleCalendar(calendar.id)}
+                    >
+                        <p>{calendar.isDefault ? 'Personal' : calendar.name}</p>
+                    </div>
+                </div>
+            {/each}
+        </div>
     </div>
 </aside>

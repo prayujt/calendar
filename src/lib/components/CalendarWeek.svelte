@@ -5,7 +5,7 @@
   import EventDetailPopup from './EventDetailPopup.svelte';
 
   import type { Calendar, Event, EventPosition } from '$lib/types';
-  import { calendars, events, selectedEvent, selectedPosition, showEventDetails } from '$lib/stores';
+  import { calendars, events, selectedCalendars, selectedEvent, selectedPosition, showEventDetails } from '$lib/stores';
   import { clickOutside, compareDates, convertToEvent, getTimeString, getCurrentHour, getMinuteFraction } from '$lib/utils';
   import { API_HOST } from '$lib/vars';
 
@@ -282,7 +282,7 @@
 
 {#if calendarMounted}
     {#each $events as event}
-        {#if eventPositions.has(event.id) && event.date >= weekStart && event.date < new Date(weekStart.getTime() + 7 * 24 * 60 * 60 * 1000)}
+        {#if $selectedCalendars.has(event.calendarId) && eventPositions.has(event.id) && event.date >= weekStart && event.date < new Date(weekStart.getTime() + 7 * 24 * 60 * 60 * 1000)}
           <div class="overflow-y-auto" on:wheel={scrollFixedElement} on:click={() => setSelectedEvent(event)}>
             <CalendarWeekEvent {event} position={eventPositions.get(event.id)}/>
           </div>
