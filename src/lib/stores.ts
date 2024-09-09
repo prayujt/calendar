@@ -21,5 +21,6 @@ export const eventPositions = writable<Map<string, EventPosition>>(
 export const tasks = writable<Task[]>([]);
 
 export const showEventDetails = writable(false);
+export const editingEventDetails = writable(false);
 export const selectedEvent = writable<Event>(undefined);
 export const selectedPosition = writable<EventPosition>(undefined);

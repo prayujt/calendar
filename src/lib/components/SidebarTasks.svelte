@@ -87,7 +87,8 @@
         {#if displayedTasks.length === 0}
             <p
               class="mt-4 text-center text-sm text-gray-600 m-2"
-              transition:fade={{duration: 200}}
+              out:fade={{duration: 0}}
+              in:fade={{duration: 200}}
             >
                 No tasks to show
             </p>
@@ -96,7 +97,8 @@
         {#each displayedTasks as task}
             <div
                 class={`border-r-8 border-${getStatusColor(task.priority)} rounded-md p-2 m-0.5`}
-                transition:fade={{duration: 200}}
+                out:fade={{duration: 0}}
+                in:fade={{duration: 200}}
             >
                 <p class="text-sm">{task.title}</p>
                 <div class="flex items-center">

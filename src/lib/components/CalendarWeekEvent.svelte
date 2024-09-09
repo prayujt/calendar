@@ -28,13 +28,16 @@
     if (mouseDown) {
       const dy = e.clientY - initialMouse;
       const pixelSnap = $gridItemHeight / 12;
-      position.top = initialComponent + (Math.round(dy / pixelSnap) * pixelSnap);
-      const newDate = new Date(originalDate);
-      newDate.setMinutes(newDate.getMinutes() + 5 * Math.round((position.top - initialComponent) / pixelSnap));
-      event.date = newDate;
 
-      if (Math.abs(dy) > 1) {
+      if (Math.abs(dy) > pixelSnap * 2) {
         dragged = true;
+      }
+
+      if (dragged) {
+        position.top = initialComponent + (Math.round(dy / pixelSnap) * pixelSnap);
+        const newDate = new Date(originalDate);
+        newDate.setMinutes(newDate.getMinutes() + 5 * Math.round((position.top - initialComponent) / pixelSnap));
+        event.date = newDate;
       }
     }
   }
@@ -61,6 +64,7 @@
         ...event,
         date: event.date
       }),
+      credentials: 'include',
     });
   }
 
@@ -88,7 +92,8 @@
 
 <div
   class="fixed"
-  transition:fade={{ duration: 250 }}
+  in:fade={{ duration: 250 }}
+  out:fade={{ duration: 100 }}
   style="top: {position.top}px; left: {position.left}px"
   on:mousedown={handleMouseDown}
   on:click={() => setSelectedEvent(event)}

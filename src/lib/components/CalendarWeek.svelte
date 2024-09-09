@@ -5,7 +5,7 @@
   import EventDetailPopup from './EventDetailPopup.svelte';
 
   import type { Calendar, Event, EventPosition } from '$lib/types';
-  import { calendars, events, eventPositions, gridItemHeight, gridItemWidth, selectedCalendars, showEventDetails } from '$lib/stores';
+  import { calendars, editingEventDetails, events, eventPositions, gridItemHeight, gridItemWidth, selectedCalendars, showEventDetails } from '$lib/stores';
   import { clickOutside, compareDates, convertToEvent, getTimeString, getCurrentHour, getMinuteFraction } from '$lib/utils';
   import { API_HOST, VITE_ENVIRONMENT } from '$lib/vars';
 
@@ -349,7 +349,7 @@
 </div>
 
 {#if $showEventDetails}
-    <div class="mr-72" use:clickOutside on:clickOutside={() => { showEventDetails.set(false); }}>
+    <div class="mr-72" use:clickOutside on:clickOutside={() => { showEventDetails.set(false); editingEventDetails.set(false); }}>
         <EventDetailPopup {gridDiv} />
     </div>
 {/if}
