@@ -1,4 +1,4 @@
-const VITE_ENVIRONMENT = import.meta.env.VITE_ENVIRONMENT;
+export const VITE_ENVIRONMENT = import.meta.env.VITE_ENVIRONMENT;
 
 export const API_HOST =
     VITE_ENVIRONMENT === "development"

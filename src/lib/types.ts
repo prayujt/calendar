@@ -43,6 +43,12 @@ export interface EventPosition {
     height: number;
 }
 
+export enum TaskPriority {
+    LOW = 0,
+    MEDIUM = 1,
+    HIGH = 2,
+}
+
 export interface Task {
     id: string;
     calendarId: string;
@@ -50,4 +56,5 @@ export interface Task {
     description: string;
     completed: boolean;
     deadline: Date;
+    priority: TaskPriority;
 }

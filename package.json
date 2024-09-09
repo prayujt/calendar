@@ -23,6 +23,7 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"@tailwindcss/line-clamp": "^0.4.4",
 		"cmdk-sv": "^0.0.18"
 	}
 }

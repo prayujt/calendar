@@ -7,7 +7,7 @@
   import type { Calendar, Event, EventPosition } from '$lib/types';
   import { calendars, events, selectedCalendars, selectedEvent, selectedPosition, showEventDetails } from '$lib/stores';
   import { clickOutside, compareDates, convertToEvent, getTimeString, getCurrentHour, getMinuteFraction } from '$lib/utils';
-  import { API_HOST } from '$lib/vars';
+  import { API_HOST, VITE_ENVIRONMENT } from '$lib/vars';
 
 
   let dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
@@ -48,7 +48,24 @@
           const calendarResponse = await fetch(`${API_HOST}/calendars`, {
             credentials: 'include',
           });
-          const calendarJson = await calendarResponse.json();
+          let calendarJson = await calendarResponse.json();
+
+          if (calendarJson.length === 0 && VITE_ENVIRONMENT !== 'development') {
+            const createCalendarResponse = await fetch(`${API_HOST}/calendars`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              credentials: 'include',
+              body: JSON.stringify({
+                name: 'Personal',
+                color: '#93c4fd',
+                isDefault: true
+              }),
+            });
+            const newCalendar = await createCalendarResponse.json();
+            calendarJson = [newCalendar];
+          }
           const calendarMap = new Map<string, any>();
           // index the calendars by id
           calendars.set(

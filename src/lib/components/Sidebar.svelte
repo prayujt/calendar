@@ -19,8 +19,8 @@
 </script>
 
 <aside class="flex justify-center shadow h-screen bg-slate-100 z-50 overflow-hidden" on:wheel={(e) => e.preventDefault()}>
-    <div class="mt-10 flex flex-col items-center p-1.5 w-full">
-        <div class="mb-5">
+    <div class="mt-4 flex flex-col items-center p-1.5 w-full">
+        <div class="mb-4">
             {#if $userInfo.avatar}
                 {#if !isLoaded}
                     <div class="w-24 h-24 rounded-full bg-gray-300 animate-pulse"></div>
@@ -43,7 +43,7 @@
                 </div>
             {/if}
         </div>
-        <div class="mb-8">
+        <div class="mb-6">
             {#if $userInfo.name}
                 <p>{$userInfo.name}</p>
                 <p class="mt-2 text-gray-600">@{$userInfo.username}</p>
@@ -53,17 +53,19 @@
             {/if}
         </div>
 
-        <SidebarTasks />
+        <div class="grow w-full overflow-hidden">
+            <SidebarTasks />
+        </div>
 
-        <div class="flex flex-col items-center mt-auto mb-4">
+        <div class="flex flex-col items-center mt-4 mb-4">
             <p class="text-sm text-gray-600 mb-2 select-none">Calendars</p>
             {#each getCalendarsArray() as calendar}
-                <div class="text-center min-w-28 max-w-36 mb-2">
+                <div class="text-center min-w-28 max-w-36 mb-1">
                     <div
                         class={`${$selectedCalendars.has(calendar.id) ? 'bg-blue-600 text-white' : 'bg-gray-200 text-black'} rounded-md cursor-pointer select-none transition-colors duration-250 ease-in-out px-2 py-1`}
                         on:click={() => toggleCalendar(calendar.id)}
                     >
-                        <p>{calendar.name}</p>
+                        <p class="text-sm">{calendar.name}</p>
                     </div>
                 </div>
             {/each}
