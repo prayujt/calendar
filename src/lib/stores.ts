@@ -5,12 +5,18 @@ export const commandMenuOpen = writable(false);
 
 export const userInfo = writable<User>({});
 
+export const gridItemHeight = writable(0);
+export const gridItemWidth = writable(0);
+
 export const calendars = writable<Map<string, Calendar>>(
     new Map<string, Calendar>(),
 );
 export const selectedCalendars = writable<Set<string>>(new Set<string>());
 
 export const events = writable<Event[]>([]);
+export const eventPositions = writable<Map<string, EventPosition>>(
+    new Map<string, EventPosition>(),
+);
 
 export const tasks = writable<Task[]>([]);
 

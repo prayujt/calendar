@@ -5,7 +5,7 @@
   import EventDetailPopup from './EventDetailPopup.svelte';
 
   import type { Calendar, Event, EventPosition } from '$lib/types';
-  import { calendars, events, selectedCalendars, selectedEvent, selectedPosition, showEventDetails } from '$lib/stores';
+  import { calendars, events, eventPositions, gridItemHeight, gridItemWidth, selectedCalendars, showEventDetails } from '$lib/stores';
   import { clickOutside, compareDates, convertToEvent, getTimeString, getCurrentHour, getMinuteFraction } from '$lib/utils';
   import { API_HOST, VITE_ENVIRONMENT } from '$lib/vars';
 
@@ -40,8 +40,6 @@
 
   let barYPosition = -1;
   let barWidth = -1;
-
-  let eventPositions = new Map<string, EventPosition>();
 
   onMount(async () => {
       try {
@@ -165,6 +163,8 @@
    */
   const updatePositions = (): void => {
       if (calendarMounted) {
+          gridItemHeight.set(refs['SUN']['12 AM'].getBoundingClientRect().height);
+          gridItemWidth.set(refs['SUN']['12 AM'].getBoundingClientRect().width);
           generateEventPositions();
           const rect = refs[currentDay][getTimeString(false)].getBoundingClientRect();
           barYPosition = (rect.y + getMinuteFraction() * rect.height);
@@ -244,7 +244,7 @@
         }
     }
 
-    eventPositions = newEventPositions;
+    eventPositions.set(newEventPositions);
   };
 
   /**
@@ -256,20 +256,6 @@
       const delta = event.deltaY || event.wheelDeltaY || event.detail;
 
       if (!$showEventDetails) gridDiv.scrollBy({ top: delta });
-  }
-
-  /**
-   * Sets the selected event and its position
-   * @param event - the event that was clicked
-   */
-  const setSelectedEvent = (event: Event): void => {
-      if ($selectedEvent && $selectedEvent.id === event.id) {
-          showEventDetails.update((value) => !value);
-          return;
-      }
-      selectedEvent.set(event);
-      selectedPosition.set(eventPositions.get(event.id));
-    showEventDetails.set(true);
   }
 
   $: morningElement, scrollToStart();
@@ -299,9 +285,9 @@
 
 {#if calendarMounted}
     {#each $events as event}
-        {#if $selectedCalendars.has(event.calendarId) && eventPositions.has(event.id) && event.date >= weekStart && event.date < new Date(weekStart.getTime() + 7 * 24 * 60 * 60 * 1000)}
-          <div class="overflow-y-auto" on:wheel={scrollFixedElement} on:click={() => setSelectedEvent(event)}>
-            <CalendarWeekEvent {event} position={eventPositions.get(event.id)}/>
+        {#if $selectedCalendars.has(event.calendarId) && $eventPositions.has(event.id) && event.date >= weekStart && event.date < new Date(weekStart.getTime() + 7 * 24 * 60 * 60 * 1000)}
+          <div class="overflow-y-auto" on:wheel={scrollFixedElement}>
+            <CalendarWeekEvent {event} position={$eventPositions.get(event.id)}/>
           </div>
         {/if}
     {/each}
