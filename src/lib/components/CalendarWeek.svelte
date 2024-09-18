@@ -10,7 +10,7 @@
   import { API_HOST, VITE_ENVIRONMENT } from '$lib/vars';
 
 
-  let dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+  let dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   let monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
   let hours: string[] = [];
@@ -29,13 +29,13 @@
   let calendarMounted = false;
 
   let refs: { [day: string]: { [hour: string]: HTMLElement } } = {
-    SUN: {},
-    MON: {},
-    TUE: {},
-    WED: {},
-    THU: {},
-    FRI: {},
-    SAT: {}
+    Sun: {},
+    Mon: {},
+    Tue: {},
+    Wed: {},
+    Thu: {},
+    Fri: {},
+    Sat: {}
   };
 
   let barYPosition = -1;
@@ -163,13 +163,13 @@
    */
   const updatePositions = (): void => {
       if (calendarMounted) {
-          gridItemHeight.set(refs['SUN']['12 AM'].getBoundingClientRect().height);
-          gridItemWidth.set(refs['SUN']['12 AM'].getBoundingClientRect().width);
+          gridItemHeight.set(refs['Sun']['12 AM'].getBoundingClientRect().height);
+          gridItemWidth.set(refs['Sun']['12 AM'].getBoundingClientRect().width);
           generateEventPositions();
           const rect = refs[currentDay][getTimeString(false)].getBoundingClientRect();
           barYPosition = (rect.y + getMinuteFraction() * rect.height);
-          const leftEdge = refs['SUN']['12 AM'].getBoundingClientRect().left;
-          const rightEdge = refs['SAT']['12 AM'].getBoundingClientRect().right;
+          const leftEdge = refs['Sun']['12 AM'].getBoundingClientRect().left;
+          const rightEdge = refs['Sat']['12 AM'].getBoundingClientRect().right;
           barWidth = rightEdge - leftEdge + 25;
       }
   }
@@ -264,16 +264,6 @@
   $: refs, gridDiv, generateEventPositions();
 </script>
 
-<div
-    class="fixed top-14 right-2 cursor-pointer rounded-full bg-white shadow-md pl-3 p-2 transition-colors hover:bg-gray-100 z-50"
-    on:click={() => changeWeek(true)}
-    on:wheel={(e) => e.preventDefault()}
->
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-8">
-        <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-    </svg>
-</div>
-
 {#if gridDiv && barYPosition > gridDiv.getBoundingClientRect().top}
     <div
         class="ml-[4rem] fixed rounded-full h-0.5 bg-blue-500 text-white"
@@ -293,33 +283,51 @@
     {/each}
 {/if}
 
-<div class="mr-10 flex flex-col h-screen">
-    <div on:wheel={(e) => e.preventDefault()} class="select-none">
-        {#if weekStart.getMonth() && weekStart.getFullYear()}
-            <div class="text-center text-2xl text-gray-800 mr-2 my-2">
-                {includeNextMonth ? `${monthNames[weekStart.getMonth()]} - ${monthNames[(weekStart.getMonth() + 1) % 12]}` : monthNames[weekStart.getMonth()] } {weekStart.getFullYear()}
-            </div>
-        {/if}
+<div class="flex flex-col h-screen">
+    <div
+      class="select-none z-40 bg-white"
+      on:wheel={(e) => e.preventDefault()}>
         <div class="flex items-center">
             <div
-                class="ml-8 mb-4 cursor-pointer rounded-full bg-white shadow-md pr-3 p-2 transition-colors hover:bg-gray-100"
-                on:click={() => changeWeek(false)}
-            >
+              class="mt-2 ml-8 cursor-pointer rounded-full bg-white shadow-md pr-3 p-2 transition-colors hover:bg-gray-100"
+              on:click={() => changeWeek(false)}>
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-8">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
                 </svg>
             </div>
-
-            <div class="mb-2 grid grid-cols-7 w-full bg-white z-40">
-                {#each weekDates as weekDate}
-                    <div class="py-2 flex flex-col items-center">
-                        <div class={`text-sm ${compareDates(weekDate.date, new Date()) && 'text-blue-700'}`}>{weekDate.day}</div>
-                        <div class={`mt-1 text-2xl text-center ${compareDates(weekDate.date, new Date()) ? 'w-14 text-white rounded-full bg-blue-500 text-white' : ''}`}>
-                            {weekDate.date.getDate()}
-                        </div>
+            {#if weekStart.getMonth() && weekStart.getFullYear()}
+                <div class="grow text-2xl text-gray-800 mr-2 my-2">
+                    <div class="flex items-center justify-center">
+                        <p class="font-bold mr-2">
+                            {monthNames[weekStart.getMonth()]} {includeNextMonth ? `- ${monthNames[(weekStart.getMonth() + 1) % 12]}` : ''}
+                        </p>
+                        <p>
+                            {weekStart.getFullYear()}
+                        </p>
                     </div>
-                {/each}
+                </div>
+            {/if}
+
+            <div
+                class="mt-2 mr-8 cursor-pointer rounded-full bg-white shadow-md pl-3 p-2 transition-colors hover:bg-gray-100"
+                on:click={() => changeWeek(true)}
+                on:wheel={(e) => e.preventDefault()}>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                </svg>
             </div>
+
+        </div>
+
+        <div class="ml-20 mb-2 flex">
+            {#each weekDates as weekDate}
+                <div class="py-2 flex justify-center items-center w-full">
+                    <div class={`text-sm ${compareDates(weekDate.date, new Date()) && 'text-blue-700'}`}>{weekDate.day}</div>
+                    <div class={`ml-3 text-xl text-center ${compareDates(weekDate.date, new Date()) ? 'w-14 text-white rounded-full bg-blue-500 text-white' : ''}`}>
+                        {weekDate.date.getDate()}
+                    </div>
+                </div>
+            {/each}
         </div>
     </div>
 
