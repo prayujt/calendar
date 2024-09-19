@@ -33,7 +33,7 @@ export interface Event {
     title: string;
     description: string;
     duration: number;
-    accepted: boolean;
+    recurrenceId: string;
 }
 
 export interface EventPosition {

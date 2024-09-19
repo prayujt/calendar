@@ -95,6 +95,14 @@
               search = '';
               value = '0';
               eventGenerationLoading = false;
+
+              if (eventJson.recurrenceId) {
+                const newEvents  = await fetch(`${API_HOST}/events`, {
+                  credentials: 'include',
+                })
+                const eventsJson = await newEvents.json();
+                events.set(eventsJson.map((eventJson: any) => convertToEvent(eventJson)));
+              }
           } catch (error) {
               console.error('Error creating new event:', error);
               eventGenerationLoading = false;
