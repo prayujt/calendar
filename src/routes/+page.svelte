@@ -48,8 +48,12 @@
     }
   });
 
+  const isMac = navigator.userAgent.includes('Mac');
+
   const keyPressEvent = async (event: KeyboardEvent) => {
-    if (event.ctrlKey && event.key === 'k') {
+    if (event.ctrlKey && event.key === 'j' && page !== 'newEvent') event.preventDefault();
+
+    if ((isMac ? event.metaKey : event.ctrlKey) && event.key === 'k') {
       event.preventDefault();
       value = '0';
       pages = [];
@@ -68,6 +72,11 @@
         event.preventDefault();
         const val = parseInt(value);
         value = ((val + 1) % getCalendarsArray().length).toString();
+      }
+      if (isMac && event.key === 'k') {
+        event.preventDefault();
+        const val = parseInt(value);
+        value = ((val - 1) % getCalendarsArray().length).toString();
       }
     }
     else if (search && page == 'createEvent') {

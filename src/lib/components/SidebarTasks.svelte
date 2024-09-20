@@ -2,6 +2,7 @@
     import { onMount } from 'svelte';
     import { fade } from 'svelte/transition';
 
+    import { API_HOST } from '../vars';
     import { calendars, selectedCalendars, tasks } from '../stores';
     import { getDateString, getTimeString } from '../utils';
     import { TaskPriority, type Task } from '../types';
@@ -9,7 +10,7 @@
     let displayedTasks: Task[];
 
     onMount(async () => {
-        const tasksReq  = await fetch(`${API_HOST}/events`, {
+        const tasksReq  = await fetch(`${API_HOST}/tasks`, {
             credentials: 'include',
         })
         const tasksJson = await tasksReq.json();

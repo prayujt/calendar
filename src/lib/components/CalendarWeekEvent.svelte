@@ -1,5 +1,6 @@
 <script lang="ts">
   import { fade } from 'svelte/transition';
+  import { onDestroy, onMount } from 'svelte';
 
   import type { Event, EventPosition } from '$lib/types';
   import { getTimeRange } from '$lib/utils';
@@ -93,12 +94,25 @@
       selectedPosition.set($eventPositions.get(e.id));
       showEventDetails.set(true);
   }
+
+  onMount(() => {
+    window.addEventListener('resize', () => {
+      if ($selectedEvent.id === event.id) selectedPosition.set($eventPositions.get(event.id))
+    });
+  })
+
+  onDestroy(() => {
+      typeof window !== 'undefined' && window.removeEventListener('resize', () => {
+        if ($selectedEvent.id === event.id) selectedPosition.set($eventPositions.get(event.id))
+      });
+  });
+
 </script>
 
 <svelte:window on:mousemove={handleMouseMove} on:mouseup={handleMouseUp} />
 
 <div
-  class={`fixed hover:shadow-lg transition-shadow hover:opacity-100 bg-white opacity-95 transition-opacity ${dragged ? 'z-30' : 'z-20'}`}
+  class={`fixed hover:shadow-md transition-shadow hover:opacity-100 bg-white opacity-95 transition-opacity ${dragged ? 'z-30' : 'z-20'}`}
   in:fade={{ duration: 250 }}
   out:fade={{ duration: 100 }}
   style="top: {position.top}px; left: {position.left}px"
@@ -106,8 +120,8 @@
   on:click={() => setSelectedEvent(event)}
 >
     <div
-      style="height: {position.height}px; width: {position.width}px; background-color: {$calendars.get(event.calendarId).color};"
-      class="shadow-lg cursor-pointer transition-fade rounded-md overflow-hidden select-none"
+      style="height: {position.height}px; width: {position.width}px; border-color: {$calendars.get(event.calendarId).color}"
+      class="shadow-lg cursor-pointer transition-fade rounded-md overflow-hidden select-none bg-blue-200"
     >
         <div class="flex flex-col h-full p-2">
             <div class="overflow-hidden">

@@ -1,9 +1,9 @@
 <script lang="ts">
+  import { fade } from 'svelte/transition';
+
   import { API_HOST } from '$lib/vars';
   import { getDateString, getTimeRange } from '$lib/utils';
-  import { calendars, editingEventDetails, events, selectedEvent, selectedPosition, showEventDetails } from '$lib/stores';
-
-  import { fade } from 'svelte/transition';
+  import { calendars, editEvent, events, selectedEvent, selectedPosition, showEventDetails } from '$lib/stores';
 
   export let gridDiv: HTMLElement;
 
@@ -63,7 +63,7 @@
                   <div class="flex gap-x-2">
                       <button
                         class="rounded-full p-1 hover:bg-gray-200"
-                        on:click={() => editingEventDetails.set(true)}
+                        on:click={() => { showEventDetails.set(false); editEvent.set($selectedEvent)}}
                       >
                           <svg class="fill-gray-600" width="20" height="20" viewBox="0 0 24 24">
                               <path d="M20.41 4.94l-1.35-1.35c-.78-.78-2.05-.78-2.83 0L3 16.82V21h4.18L20.41 7.77c.79-.78.79-2.05 0-2.83zm-14 14.12L5 19v-1.36l9.82-9.82 1.41 1.41-9.82 9.83z"></path>

@@ -3,9 +3,10 @@
 
   import CalendarWeekEvent from './CalendarWeekEvent.svelte';
   import EventDetailPopup from './EventDetailPopup.svelte';
+  import EditEvent from './EditEvent.svelte';
 
   import type { Calendar, Event, EventPosition } from '$lib/types';
-  import { calendars, dragging, editingEventDetails, events, eventPositions, gridItemHeight, gridItemWidth, selectedCalendars, showEventDetails } from '$lib/stores';
+  import { calendars, dragging, editEvent, events, eventPositions, gridItemHeight, gridItemWidth, selectedCalendars, selectedEvent, showEventDetails } from '$lib/stores';
   import { clickOutside, compareDates, convertToEvent, getTimeString, getCurrentHour, getMinuteFraction } from '$lib/utils';
   import { API_HOST, VITE_ENVIRONMENT } from '$lib/vars';
 
@@ -386,8 +387,14 @@
 </div>
 
 {#if $showEventDetails}
-    <div class="mr-72" use:clickOutside on:clickOutside={() => { showEventDetails.set(false); editingEventDetails.set(false); }}>
+    <div use:clickOutside on:clickOutside={() => showEventDetails.set(false) }>
         <EventDetailPopup {gridDiv} />
+    </div>
+{/if}
+
+{#if $editEvent}
+    <div use:clickOutside on:clickOutside={() => editEvent.set(undefined) }>
+        <EditEvent />
     </div>
 {/if}
 
