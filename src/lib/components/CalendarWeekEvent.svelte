@@ -3,7 +3,7 @@
 
   import type { Event, EventPosition } from '$lib/types';
   import { getTimeRange } from '$lib/utils';
-  import { calendars, eventPositions, gridItemHeight, selectedEvent, selectedPosition, showEventDetails } from '$lib/stores';
+  import { calendars, dragging, eventPositions, gridItemHeight, selectedEvent, selectedPosition, showEventDetails } from '$lib/stores';
   import { API_HOST } from '$lib/vars';
 
   export let event: Event;
@@ -31,6 +31,7 @@
 
       if (Math.abs(dy) > pixelSnap * 2) {
         dragged = true;
+        dragging.set(event.id);
       }
 
       if (dragged) {
@@ -59,6 +60,7 @@
       value.set(event.id, position);
       return value;
     });
+    dragging.set(undefined);
 
     fetch(`${API_HOST}/events/${event.id}`, {
       method: 'PUT',

@@ -5,7 +5,7 @@
   import EventDetailPopup from './EventDetailPopup.svelte';
 
   import type { Calendar, Event, EventPosition } from '$lib/types';
-  import { calendars, editingEventDetails, events, eventPositions, gridItemHeight, gridItemWidth, selectedCalendars, showEventDetails } from '$lib/stores';
+  import { calendars, dragging, editingEventDetails, events, eventPositions, gridItemHeight, gridItemWidth, selectedCalendars, showEventDetails } from '$lib/stores';
   import { clickOutside, compareDates, convertToEvent, getTimeString, getCurrentHour, getMinuteFraction } from '$lib/utils';
   import { API_HOST, VITE_ENVIRONMENT } from '$lib/vars';
 
@@ -244,6 +244,12 @@
 
       const overlappingEvents = eventSlots.get(event.id) || [];
       overlappingEvents.sort((a, b) => {
+        if (a.id === $dragging && b.id !== $dragging) {
+          return -1; // a should come first
+        }
+        if (b.id === $dragging && a.id !== $dragging) {
+          return 1; // b should come first
+        }
         const startA = a.date.getTime();
         const startB = b.date.getTime();
 

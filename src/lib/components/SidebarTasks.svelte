@@ -8,64 +8,70 @@
 
     let displayedTasks: Task[];
 
-    onMount(() => {
-        tasks.set([
-            {
-                id: '1',
-                calendarId: 'fa90ab20-213b-47c2-9f44-4545ff9633a1',
-                title: 'Finish CNT4007 Homework',
-                description: 'Big assignment, need to start early',
-                deadline: new Date(),
-                priority: TaskPriority.HIGH,
-                completed: false,
-            },
-            {
-                id: '2',
-                calendarId: '70e3c9da-e063-4306-8663-8ec3718b001a',
-                title: 'Finish iOS bugs before release',
-                description: 'Issues with the timeline page',
-                deadline: new Date('2024-09-24'),
-                priority: TaskPriority.MEDIUM,
-                completed: false,
-            },
-            {
-                id: '3',
-                calendarId: '70e3c9da-e063-4306-8663-8ec3718b001a',
-                title: 'Integrate Stripe Payments into Website',
-                description: 'Issues with the timeline page',
-                deadline: new Date('2024-09-24'),
-                priority: TaskPriority.LOW,
-                completed: false,
-            },
-            {
-                id: '1',
-                calendarId: 'e2b95734-9689-4995-9bf2-38741e871d53',
-                title: 'Finish CNT4007 Homework',
-                description: 'Big assignment, need to start early',
-                deadline: new Date(),
-                priority: TaskPriority.HIGH,
-                completed: false,
-            },
-            {
-                id: '2',
-                calendarId: '390c5ec0-796c-4811-a652-8e6f4dd90d32',
-                title: 'Finish iOS bugs before release',
-                description: 'Issues with the timeline page',
-                deadline: new Date('2024-09-24'),
-                priority: TaskPriority.MEDIUM,
-                completed: false,
-            },
-            {
-                id: '3',
-                calendarId: '390c5ec0-796c-4811-a652-8e6f4dd90d32',
-                title: 'Integrate Stripe Payments into Website',
-                description: 'Issues with the timeline page',
-                deadline: new Date('2024-09-24'),
-                priority: TaskPriority.LOW,
-                completed: false,
-            },
+    onMount(async () => {
+        const tasksReq  = await fetch(`${API_HOST}/events`, {
+            credentials: 'include',
+        })
+        const tasksJson = await tasksReq.json();
+        tasks.set(tasksJson);
 
-        ])
+        // tasks.set([
+        //     {
+        //         id: '1',
+        //         calendarId: 'fa90ab20-213b-47c2-9f44-4545ff9633a1',
+        //         title: 'Finish CNT4007 Homework',
+        //         description: 'Big assignment, need to start early',
+        //         deadline: new Date(),
+        //         priority: TaskPriority.HIGH,
+        //         completed: false,
+        //     },
+        //     {
+        //         id: '2',
+        //         calendarId: '70e3c9da-e063-4306-8663-8ec3718b001a',
+        //         title: 'Finish iOS bugs before release',
+        //         description: 'Issues with the timeline page',
+        //         deadline: new Date('2024-09-24'),
+        //         priority: TaskPriority.MEDIUM,
+        //         completed: false,
+        //     },
+        //     {
+        //         id: '3',
+        //         calendarId: '70e3c9da-e063-4306-8663-8ec3718b001a',
+        //         title: 'Integrate Stripe Payments into Website',
+        //         description: 'Issues with the timeline page',
+        //         deadline: new Date('2024-09-24'),
+        //         priority: TaskPriority.LOW,
+        //         completed: false,
+        //     },
+        //     {
+        //         id: '1',
+        //         calendarId: 'e2b95734-9689-4995-9bf2-38741e871d53',
+        //         title: 'Finish CNT4007 Homework',
+        //         description: 'Big assignment, need to start early',
+        //         deadline: new Date(),
+        //         priority: TaskPriority.HIGH,
+        //         completed: false,
+        //     },
+        //     {
+        //         id: '2',
+        //         calendarId: '390c5ec0-796c-4811-a652-8e6f4dd90d32',
+        //         title: 'Finish iOS bugs before release',
+        //         description: 'Issues with the timeline page',
+        //         deadline: new Date('2024-09-24'),
+        //         priority: TaskPriority.MEDIUM,
+        //         completed: false,
+        //     },
+        //     {
+        //         id: '3',
+        //         calendarId: '390c5ec0-796c-4811-a652-8e6f4dd90d32',
+        //         title: 'Integrate Stripe Payments into Website',
+        //         description: 'Issues with the timeline page',
+        //         deadline: new Date('2024-09-24'),
+        //         priority: TaskPriority.LOW,
+        //         completed: false,
+        //     },
+        //
+        // ])
     });
 
     const getStatusColor = (priority: TaskPriority) => {

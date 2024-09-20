@@ -24,3 +24,5 @@ export const showEventDetails = writable(false);
 export const editingEventDetails = writable(false);
 export const selectedEvent = writable<Event>(undefined);
 export const selectedPosition = writable<EventPosition>(undefined);
+
+export const dragging = writable<string>(undefined);

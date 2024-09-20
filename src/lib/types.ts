@@ -51,10 +51,13 @@ export enum TaskPriority {
 
 export interface Task {
     id: string;
+    userId: string;
     calendarId: string;
     title: string;
     description: string;
-    completed: boolean;
+    duration: number;
     deadline: Date;
+    difficulty: number;
     priority: TaskPriority;
+    completed: boolean;
 }
