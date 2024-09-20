@@ -48,7 +48,7 @@
     }
   });
 
-  const isMac = navigator.userAgent.includes('Mac');
+  const isMac = typeof navigator !== 'undefined' ? navigator.userAgent.includes('Mac') : false;
 
   const keyPressEvent = async (event: KeyboardEvent) => {
     if (event.ctrlKey && event.key === 'j' && page !== 'newEvent') event.preventDefault();
