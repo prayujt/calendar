@@ -259,7 +259,7 @@
   }
 
   $: morningElement, scrollToStart();
-  $: refs, currentTime, calendarMounted, $events, updatePositions();
+  $: refs, currentTime, calendarMounted, $events, $eventPositions, updatePositions();
   $: refs, calendarMounted = checkCalendarMounted();
   $: refs, gridDiv, generateEventPositions();
 </script>

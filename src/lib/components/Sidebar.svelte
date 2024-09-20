@@ -64,7 +64,7 @@
                     <div
                         class={`${$selectedCalendars.has(calendar.id) ? 'bg-blue-600 text-white' : 'bg-gray-200 text-black'} rounded-md cursor-pointer select-none transition-colors duration-250 ease-in-out px-2 py-1`}
                         on:click={() => toggleCalendar(calendar.id)}
-                    >
+                        >
                         <p class="text-sm">{calendar.name}</p>
                     </div>
                 </div>

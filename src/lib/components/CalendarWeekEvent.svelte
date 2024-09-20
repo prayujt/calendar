@@ -38,13 +38,19 @@
         const newDate = new Date(originalDate);
         newDate.setMinutes(newDate.getMinutes() + 5 * Math.round((position.top - initialComponent) / pixelSnap));
         event.date = newDate;
+
+
+        selectedPosition.set(position);
+        eventPositions.update((value) => {
+          value.set(event.id, position);
+          return value;
+        });
       }
     }
   }
 
   const handleMouseUp = () => {
     if (!dragged) return;
-    console.log('mouse up', event.title)
 
     mouseDown = false;
     showEventDetails.set(false);
@@ -91,7 +97,7 @@
 <svelte:window on:mousemove={handleMouseMove} on:mouseup={handleMouseUp} />
 
 <div
-  class="fixed"
+  class="fixed hover:shadow-lg transition-shadow hover:opacity-100 bg-white opacity-95 transition-opacity"
   in:fade={{ duration: 250 }}
   out:fade={{ duration: 100 }}
   style="top: {position.top}px; left: {position.left}px"

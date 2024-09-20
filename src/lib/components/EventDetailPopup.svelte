@@ -29,7 +29,7 @@
   };
 
   const deleteEvent = async (eventId: string) => {
-    const response = await fetch(`${API_HOST}/events/${eventId}`, {
+    const response = await fetch(`${API_HOST}/events/${eventId}?recurring=true`, {
       method: 'DELETE',
       credentials: 'include',
     });
