@@ -199,49 +199,72 @@
   }
 
   /**
+   * Finds all of the overlapping events
+   */
+  const findOverlappingEvents = (): Map<string, Event[]> => {
+    const overlaps = new Map<string, Event[]>();
+
+    for (let i = 0; i < $events.length; i++) {
+      const currentEvent = $events[i];
+      const currentStart = currentEvent.date.getTime();
+      const currentEnd = currentStart + currentEvent.duration * 60 * 1000;
+
+      for (let j = 0; j < $events.length; j++) {
+        const otherEvent = $events[j];
+        const otherStart = otherEvent.date.getTime();
+        const otherEnd = otherStart + otherEvent.duration * 60 * 1000;
+
+        // Check for overlap
+        if (currentStart < otherEnd && currentEnd > otherStart) {
+          if (!overlaps.has(currentEvent.id)) {
+            overlaps.set(currentEvent.id, []);
+          }
+          overlaps.get(currentEvent.id)?.push(otherEvent);
+        }
+      }
+    }
+
+    return overlaps;
+  }
+
+  /**
    * Generates the positions of the events on the calendar
    */
   const generateEventPositions = (): void => {
     const newEventPositions = new Map<string, EventPosition>();
-    const eventSlots = new Map<string, Event[]>();
+    const eventSlots = findOverlappingEvents();
 
     for (const event of $events) {
-        const dayName = dayNames[event.date.getDay()];
-        if (!refs[dayName] || !refs[dayName][getTimeString(false, event.date)]) {
-            newEventPositions.set(event.id, { top: 0, left: 0, height: 0, width: 0 });
-            continue;
+      const dayName = dayNames[event.date.getDay()];
+      if (!refs[dayName] || !refs[dayName][getTimeString(false, event.date)]) {
+        newEventPositions.set(event.id, { top: 0, left: 0, height: 0, width: 0 });
+        continue;
+      }
+      const rect = refs[dayName][getTimeString(false, event.date)].getBoundingClientRect();
+
+      const overlappingEvents = eventSlots.get(event.id) || [];
+      overlappingEvents.sort((a, b) => {
+        const startA = a.date.getTime();
+        const startB = b.date.getTime();
+
+        if (startA !== startB) {
+          return startA - startB;
+        } else {
+          return b.duration - a.duration;
         }
+      });
 
-        const timeSlotKey = `${dayName}-${event.date.getTime()}`;
-        if (!eventSlots.has(timeSlotKey)) {
-            eventSlots.set(timeSlotKey, []);
-        }
-        eventSlots.get(timeSlotKey)!.push(event);
-    }
+      const numEvents = overlappingEvents.length;
+      // subtracting 2 to allow for 1 px left and right
+      const width = (rect.width - 2) / numEvents;
+      const baseLeft = rect.x;
 
-    for (const [timeSlotKey, eventsInSlot] of eventSlots) {
-        const dayName = timeSlotKey.split('-')[0];
-        const events = eventsInSlot;
-        const rect = refs[dayName][getTimeString(false, new Date(parseInt(timeSlotKey.split('-')[1])))]?.getBoundingClientRect();
+      const i = overlappingEvents.findIndex((e) => e.id === event.id);
+      const left = baseLeft + i * width + (i > 0 ? 1 : 0);
+      const top = rect.y + getMinuteFraction(event.date) * rect.height;
+      const height = (event.duration / 60) * rect.height;
 
-        if (!rect) continue;
-
-        events.sort((a, b) => (b.duration - a.duration));
-
-        const numEvents = events.length;
-        // subtracting 2 to allow for 1 px left and right
-        const width = (rect.width - 2) / numEvents;
-        const baseLeft = rect.x;
-
-        // need to fix calculation here to only take away from left and right most events
-        for (let i = 0; i < numEvents; i++) {
-            const event = events[i];
-            const left = baseLeft + i * width + (1 / numEvents);
-            const top = rect.y + getMinuteFraction(event.date) * rect.height;
-            const height = (event.duration / 60) * rect.height;
-
-            newEventPositions.set(event.id, { top, left, height, width });
-        }
+      newEventPositions.set(event.id, { top, left, height, width });
     }
 
     eventPositions.set(newEventPositions);

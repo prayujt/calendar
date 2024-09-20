@@ -39,7 +39,6 @@
         newDate.setMinutes(newDate.getMinutes() + 5 * Math.round((position.top - initialComponent) / pixelSnap));
         event.date = newDate;
 
-
         selectedPosition.set(position);
         eventPositions.update((value) => {
           value.set(event.id, position);
@@ -90,14 +89,14 @@
       }
       selectedEvent.set(e);
       selectedPosition.set($eventPositions.get(e.id));
-    showEventDetails.set(true);
+      showEventDetails.set(true);
   }
 </script>
 
 <svelte:window on:mousemove={handleMouseMove} on:mouseup={handleMouseUp} />
 
 <div
-  class="fixed hover:shadow-lg transition-shadow hover:opacity-100 bg-white opacity-95 transition-opacity"
+  class={`fixed hover:shadow-lg transition-shadow hover:opacity-100 bg-white opacity-95 transition-opacity ${dragged ? 'z-30' : 'z-20'}`}
   in:fade={{ duration: 250 }}
   out:fade={{ duration: 100 }}
   style="top: {position.top}px; left: {position.left}px"
@@ -106,13 +105,13 @@
 >
     <div
       style="height: {position.height}px; width: {position.width}px; background-color: {$calendars.get(event.calendarId).color};"
-      class="shadow-lg cursor-pointer transition-fade rounded-md overflow-hidden z-20 select-none"
+      class="shadow-lg cursor-pointer transition-fade rounded-md overflow-hidden select-none"
     >
         <div class="flex flex-col h-full p-2">
             <div class="overflow-hidden">
                 <p class={`text-xs font-semibold line-clamp-${Math.ceil(position.height / 42)}`}>{event.title}</p>
             </div>
-            {#if position.height > 42}
+            {#if position.height > 42 && position.width > 110}
                 <p class="text-xs">{getTimeRange(event.date, event.duration)}</p>
             {/if}
         </div>
