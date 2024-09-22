@@ -202,16 +202,16 @@
   /**
    * Finds all of the overlapping events
    */
-  const findOverlappingEvents = (): Map<string, Event[]> => {
+  const findOverlappingEvents = (events: Event[]): Map<string, Event[]> => {
     const overlaps = new Map<string, Event[]>();
 
-    for (let i = 0; i < $events.length; i++) {
-      const currentEvent = $events[i];
+    for (let i = 0; i < events.length; i++) {
+      const currentEvent = events[i];
       const currentStart = currentEvent.date.getTime();
       const currentEnd = currentStart + currentEvent.duration * 60 * 1000;
 
-      for (let j = 0; j < $events.length; j++) {
-        const otherEvent = $events[j];
+      for (let j = 0; j < events.length; j++) {
+        const otherEvent = events[j];
         const otherStart = otherEvent.date.getTime();
         const otherEnd = otherStart + otherEvent.duration * 60 * 1000;
 
@@ -233,9 +233,10 @@
    */
   const generateEventPositions = (): void => {
     const newEventPositions = new Map<string, EventPosition>();
-    const eventSlots = findOverlappingEvents();
+    const weekEvents: Event[] = $events.filter((event) => event.date >= weekStart && event.date < new Date(weekStart.getTime() + 7 * 24 * 60 * 60 * 1000));
+    const eventSlots = findOverlappingEvents(weekEvents);
 
-    for (const event of $events) {
+    for (const event of weekEvents) {
       const dayName = dayNames[event.date.getDay()];
       if (!refs[dayName] || !refs[dayName][getTimeString(false, event.date)]) {
         newEventPositions.set(event.id, { top: 0, left: 0, height: 0, width: 0 });
@@ -289,7 +290,7 @@
   }
 
   $: morningElement, scrollToStart();
-  $: refs, currentTime, calendarMounted, $events, $eventPositions, updatePositions();
+  $: refs, currentTime, calendarMounted, $events, $eventPositions, weekDates, updatePositions();
   $: refs, calendarMounted = checkCalendarMounted();
   $: refs, gridDiv, generateEventPositions();
 </script>
