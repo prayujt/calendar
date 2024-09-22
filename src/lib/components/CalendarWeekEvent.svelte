@@ -86,10 +86,6 @@
           dragged = false;
           return;
       }
-      if ($selectedEvent && $selectedEvent.id === event.id) {
-          showEventDetails.update((value) => !value);
-          return;
-      }
       selectedEvent.set(e);
       selectedPosition.set($eventPositions.get(e.id));
       showEventDetails.set(true);
@@ -106,7 +102,6 @@
         if ($selectedEvent.id === event.id) selectedPosition.set($eventPositions.get(event.id))
       });
   });
-
 </script>
 
 <svelte:window on:mousemove={handleMouseMove} on:mouseup={handleMouseUp} />

@@ -44,13 +44,15 @@
             {/if}
         </div>
         <div class="mb-6">
-            {#if $userInfo.name}
-                <p>{$userInfo.name}</p>
-                <p class="mt-2 text-gray-600">@{$userInfo.username}</p>
-            {:else}
-                <div class="animate-pulse bg-gray-300 h-4 rounded w-1/2 mb-2"></div>
-                <div class="bg-gray-300 h-4 rounded w-1/3"></div>
-            {/if}
+            <div class="flex flex-col items-center">
+                {#if $userInfo.name}
+                    <p class="font-semibold">{$userInfo.name}</p>
+                    <p class="mt-2 text-gray-600">@{$userInfo.username}</p>
+                {:else}
+                    <div class="animate-pulse bg-gray-300 h-4 rounded w-1/2 mb-2"></div>
+                    <div class="bg-gray-300 h-4 rounded w-1/3"></div>
+                {/if}
+            </div>
         </div>
 
         <div class="grow w-full overflow-hidden">

@@ -52,14 +52,15 @@
 
   const keyPressEvent = async (event: KeyboardEvent) => {
     if (event.ctrlKey && event.key === 'j' && page !== 'newEvent') event.preventDefault();
+    if (event.ctrlKey && event.key === 'k' && page !== 'newEvent' && $commandMenuOpen) event.preventDefault();
 
-    if ((isMac ? event.metaKey : event.ctrlKey) && event.key === 'k') {
+    if ((isMac ? event.metaKey : event.ctrlKey) && event.key === 'k' && !$commandMenuOpen) {
       event.preventDefault();
-      value = '0';
+      commandMenuOpen.set(true);
       pages = [];
-      commandMenuOpen.update((prev) => !prev);
+      value = '0';
     }
-    else if (event.key === 'Escape' || (event.key === 'Backspace' && !search)) {
+    else if (event.key === 'Escape' || (event.key === 'Backspace' && !search && $commandMenuOpen)) {
       event.preventDefault();
       if (pages.length > 0) {
         const newPages = pages.slice(0, -1);
@@ -67,16 +68,16 @@
         value = '0';
       } else commandMenuOpen.set(false);
     }
-    else if (page == 'newEvent') {
+    else if (page === 'newEvent') {
       if (event.ctrlKey && event.key === 'j') {
         event.preventDefault();
         const val = parseInt(value);
         value = ((val + 1) % getCalendarsArray().length).toString();
       }
-      if (isMac && event.key === 'k') {
+      if (event.ctrlKey && event.key === 'k') {
         event.preventDefault();
         const val = parseInt(value);
-        value = ((val - 1) % getCalendarsArray().length).toString();
+        value = ((val - 1 + getCalendarsArray().length) % getCalendarsArray().length).toString();
       }
     }
     else if (search && page == 'createEvent') {
@@ -130,13 +131,13 @@
 <svelte:window on:keydown={keyPressEvent} />
 
 <Command.Dialog
-  class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50"
+  class="fixed inset-0 z-50 flex items-center justify-center p-4"
   open={$commandMenuOpen}
   on:close={() => commandMenuOpen.set(false)}
   bind:value={value}
   label="Command Menu"
 >
-    <div class={`bg-white rounded-lg shadow-lg h-1/2 w-1/3 overflow-y-auto`}>
+    <div class={`bg-white rounded-lg shadow-2xl h-1/2 w-1/3 overflow-y-auto opacity-90`}>
         <Command.Input
           bind:value={search}
           class="selection:text-white selection:bg-orange-500 text-lg mt-4 mx-3 w-[calc(100%-1.5rem)] focus:outline-none focus:border-transparent"

@@ -289,6 +289,24 @@
       if (!$showEventDetails) gridDiv.scrollBy({ top: delta });
   }
 
+  /**
+   * Processes a click on the calendar grid
+   * @param day - the day of the week
+   * @param hour - the hour of the day
+   */
+  const processGridClick = (day: string, hour: string): void => {
+    if (!$showEventDetails || $editEvent) {
+      editEvent.set({
+        date: new Date(weekStart.getTime() + dayNames.indexOf(day) * 24 * 60 * 60 * 1000 + hours.indexOf(hour) * 60 * 60 * 1000),
+        duration: 60,
+        calendarId: Array.from($selectedCalendars).find((calendarId) => $calendars.get(calendarId)?.isDefault) || '',
+        title: '',
+        description: '',
+      } as Event);
+    }
+    else showEventDetails.set(false);
+  }
+
   $: morningElement, scrollToStart();
   $: refs, currentTime, calendarMounted, $events, $eventPositions, weekDates, updatePositions();
   $: refs, calendarMounted = checkCalendarMounted();
@@ -379,6 +397,7 @@
                     <div
                         class="hour-card flex-1 p-2 border-t border-l border-gray-200 bg-white hover:bg-gray-100 transition-colors"
                         bind:this={refs[dayName][hour]}
+                        on:click={() => processGridClick(dayName, hour)}
                     >
                     </div>
                 {/each}
@@ -388,13 +407,13 @@
 </div>
 
 {#if $showEventDetails}
-    <div use:clickOutside on:clickOutside={() => showEventDetails.set(false) }>
+    <div>
         <EventDetailPopup {gridDiv} />
     </div>
 {/if}
 
 {#if $editEvent}
-    <div use:clickOutside on:clickOutside={() => editEvent.set(undefined) }>
+    <div>
         <EditEvent />
     </div>
 {/if}

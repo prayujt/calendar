@@ -1,5 +1,5 @@
 import { writable } from "svelte/store";
-import type { Task, User } from "./types";
+import type { Calendar, Event, Task, User } from "./types";
 
 export const commandMenuOpen = writable(false);
 
