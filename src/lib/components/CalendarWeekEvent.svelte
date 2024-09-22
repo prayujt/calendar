@@ -4,7 +4,7 @@
 
   import type { Event, EventPosition } from '$lib/types';
   import { getTimeRange } from '$lib/utils';
-  import { calendars, dragging, eventPositions, gridItemHeight, selectedEvent, selectedPosition, showEventDetails } from '$lib/stores';
+  import { calendars, dragging, editEvent, eventPositions, gridItemHeight, selectedEvent, selectedPosition, showEventDetails } from '$lib/stores';
   import { API_HOST } from '$lib/vars';
 
   export let event: Event;
@@ -86,6 +86,7 @@
           dragged = false;
           return;
       }
+      if ($editEvent) return;
       selectedEvent.set(e);
       selectedPosition.set($eventPositions.get(e.id));
       showEventDetails.set(true);
@@ -93,13 +94,13 @@
 
   onMount(() => {
     window.addEventListener('resize', () => {
-      if ($selectedEvent.id === event.id) selectedPosition.set($eventPositions.get(event.id))
+      if ($selectedEvent && $selectedEvent.id === event.id) selectedPosition.set($eventPositions.get(event.id))
     });
   })
 
   onDestroy(() => {
       typeof window !== 'undefined' && window.removeEventListener('resize', () => {
-        if ($selectedEvent.id === event.id) selectedPosition.set($eventPositions.get(event.id))
+        if ($selectedEvent && $selectedEvent.id === event.id) selectedPosition.set($eventPositions.get(event.id))
       });
   });
 </script>

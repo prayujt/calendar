@@ -2,9 +2,11 @@
   import { onMount } from 'svelte';
   import { fade } from 'svelte/transition';
 
-  import { editEvent, events } from '$lib/stores';
+  import { editEvent, events, selectedPosition } from '$lib/stores';
   import { API_HOST } from '$lib/vars';
   import { convertToEvent } from '$lib/utils';
+
+  export let gridDiv: HTMLElement;
 
   let date: string;
   let startTime: string;
@@ -12,9 +14,32 @@
 
   let titleComponent: HTMLInputElement;
 
+  let component: HTMLElement;
+  let width: number;
+  let height: number;
+
+  let top: number;
+  let left: number;
+
   onMount(() => {
     titleComponent.focus();
   })
+
+  const calculateTop = () => {
+    const temp = $selectedPosition.top - height / 4;
+    if (temp + height > gridDiv.getBoundingClientRect().bottom)
+      return gridDiv.getBoundingClientRect().bottom - height - 10;
+    if (temp < gridDiv.getBoundingClientRect().top)
+      return gridDiv.getBoundingClientRect().top + 10;
+    return temp;
+  };
+
+  const calculateLeft = () => {
+    const temp = $selectedPosition.left - width - 10;
+    if (temp < gridDiv.getBoundingClientRect().left)
+      return $selectedPosition.left + $selectedPosition.width + 10;
+    return temp;
+  };
 
   const updateInformation = () => {
     if (!$editEvent) return;
@@ -67,10 +92,17 @@
   };
 
   $: $editEvent, updateInformation();
+  $: component, width = component && component.getBoundingClientRect().width;
+  $: component, height = component && component.getBoundingClientRect().height;
+
+  $: $selectedPosition, height, top = calculateTop();
+  $: $selectedPosition, width, left = calculateLeft();
 </script>
 
 <div
-  class="fixed inset-0 mx-auto my-auto bg-white bg-opacity-90 rounded-lg shadow-2xl p-2 w-[35%] h-[45%] z-30"
+  class="fixed bg-white rounded-lg shadow-2xl p-2 w-96 h-96 z-30"
+  style="top: {top}px; left: {left}px;"
+  bind:this={component}
   in:fade={{ duration: 100 }}
   out:fade={{ duration: 75 }}
 >

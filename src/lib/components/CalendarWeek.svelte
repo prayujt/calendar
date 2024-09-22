@@ -6,8 +6,8 @@
   import EditEvent from './EditEvent.svelte';
 
   import type { Calendar, Event, EventPosition } from '$lib/types';
-  import { calendars, dragging, editEvent, events, eventPositions, gridItemHeight, gridItemWidth, selectedCalendars, selectedEvent, showEventDetails } from '$lib/stores';
-  import { clickOutside, compareDates, convertToEvent, getTimeString, getCurrentHour, getMinuteFraction } from '$lib/utils';
+  import { calendars, dragging, editEvent, events, eventPositions, gridItemHeight, gridItemWidth, selectedCalendars, selectedPosition, showEventDetails } from '$lib/stores';
+  import { compareDates, convertToEvent, getTimeString, getCurrentHour, getMinuteFraction } from '$lib/utils';
   import { API_HOST, VITE_ENVIRONMENT } from '$lib/vars';
 
 
@@ -295,7 +295,18 @@
    * @param hour - the hour of the day
    */
   const processGridClick = (day: string, hour: string): void => {
-    if (!$showEventDetails || $editEvent) {
+    if ($editEvent) {
+      editEvent.set(undefined);
+      return;
+    }
+    if (!$showEventDetails) {
+      const rect = refs[day][hour].getBoundingClientRect();
+      selectedPosition.set({
+        top: rect.top,
+        left: rect.left,
+        width: rect.width,
+        height: rect.height,
+      } as Position);
       editEvent.set({
         date: new Date(weekStart.getTime() + dayNames.indexOf(day) * 24 * 60 * 60 * 1000 + hours.indexOf(hour) * 60 * 60 * 1000),
         duration: 60,
@@ -414,7 +425,7 @@
 
 {#if $editEvent}
     <div>
-        <EditEvent />
+        <EditEvent {gridDiv} />
     </div>
 {/if}
 
