@@ -2,10 +2,10 @@
   import { onMount } from 'svelte';
   import { fade } from 'svelte/transition';
 
-  import type { CreateEvent } from '$lib/types';
-  import { editEvent, events, selectedPosition } from '$lib/stores';
+  import type { Event } from '$lib/types';
+  import { calendars, editEvent, events, selectedPosition } from '$lib/stores';
   import { API_HOST } from '$lib/vars';
-  import { convertToEvent } from '$lib/utils';
+  import { convertToEvent, getCalendarsArray } from '$lib/utils';
 
   export let gridDiv: HTMLElement;
 
@@ -19,14 +19,19 @@
   let width: number;
   let height: number;
 
-  let top: number;
-  let left: number;
+  let top: string | number;
+  let left: string | number;
+
+  let savingEvent = false;
+  let showCalendarDropdown = false;
 
   onMount(() => {
     titleComponent.focus();
-  })
+    $editEvent.recurring = false;
+  });
 
   const calculateTop = () => {
+    if (!$selectedPosition) return '50%';
     const temp = $selectedPosition.top - height / 4;
     if (temp + height > gridDiv.getBoundingClientRect().bottom)
       return gridDiv.getBoundingClientRect().bottom - height - 10;
@@ -36,6 +41,7 @@
   };
 
   const calculateLeft = () => {
+    if (!$selectedPosition) return '50%';
     const temp = $selectedPosition.left - width - 10;
     if (temp < gridDiv.getBoundingClientRect().left)
       return $selectedPosition.left + $selectedPosition.width + 10;
@@ -58,9 +64,11 @@
   }
 
   const saveEvent = async () => {
-    if (!$editEvent.title) {
+    if (!$editEvent.title || !date || !startTime || !endTime) {
+      alert('Please fill in all the fields');
       return;
     }
+    savingEvent = true;
     const event: Event = {
       ...$editEvent,
       date: new Date(`${date} ${startTime}`),
@@ -79,21 +87,31 @@
       events.set([...$events].map((e) => (e.id === event.id ? event : e)));
     }
     else {
-      const createEvent: CreateEvent = {
-        ...event,
-        recurring: false
-      }
       const res = await fetch(`${API_HOST}/events`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(createEvent)
+        body: JSON.stringify(event)
       });
       const eventJson = await res.json();
-      events.set([...$events, convertToEvent(eventJson)]);
+
+      if (event.recurring) {
+        const newEvents  = await fetch(`${API_HOST}/events`, {
+          credentials: 'include',
+        })
+        const eventsJson = await newEvents.json();
+        events.set(eventsJson.map((eventJson: any) => convertToEvent(eventJson)));
+      }
+      else events.set([...$events, convertToEvent(eventJson)]);
     }
+    savingEvent = false;
     editEvent.set(undefined);
+  };
+
+  const selectCalendar = (id: string) => {
+    $editEvent.calendarId = id;
+    showCalendarDropdown = false;
   };
 
   $: $editEvent, updateInformation();
@@ -105,7 +123,7 @@
 </script>
 
 <div
-  class="fixed bg-white rounded-lg shadow-2xl p-2 w-96 h-96 z-30"
+  class={`fixed bg-white rounded-lg shadow-2xl p-2 z-30 ${!$selectedPosition ? 'inset-0 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-1/4 h-1/2' : 'w-min h-min'}`}
   style="top: {top}px; left: {left}px;"
   bind:this={component}
   in:fade={{ duration: 100 }}
@@ -170,12 +188,57 @@
 
                 <div class="mt-6">
                     <textarea
-                      class="text-md pl-1 h-44 w-full focus:outline-none resize-none"
+                      class="text-md pl-1 h-32 w-full focus:outline-none resize-none"
                       tabindex="0"
                       placeholder="Enter event description"
                       bind:value={$editEvent.description}
                     />
                 </div>
+            </div>
+
+            <div class="flex flex-col justify-center">
+                {#if !$editEvent.id}
+                    <div class="flex items-center mt-2 cursor-pointer w-min">
+                        <input
+                          tabindex="0"
+                          type="checkbox"
+                          bind:checked={$editEvent.recurring}
+                          class="cursor-pointer w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded"/>
+                        <button on:click={() => $editEvent.recurring = !$editEvent.recurring} tabindex="-1">
+                            <p class="ms-2 text-sm font-medium text-gray-900">
+                                Recurring
+                            </p>
+                        </button>
+                    </div>
+                {/if}
+
+                {#if showCalendarDropdown}
+                    <div class="flex flex-col justify-center shadow-lg w-min p-2 select-none cursor-pointer">
+                        {#each getCalendarsArray() as calendar (calendar.id)}
+                            <div
+                              class="mt-2 flex items-center"
+                              on:click={() => selectCalendar(calendar.id)}>
+                                <div
+                                  class="rounded-sm w-3 h-3"
+                                  style="background-color: {calendar.color};">
+                                </div>
+                                <p class="text-sm ml-2">{calendar.name}</p>
+                            </div>
+                        {/each}
+                    </div>
+                {:else}
+                    <div
+                      class="mt-2 ml-1 flex items-center cursor-pointer select-none w-min"
+                      on:click={() => showCalendarDropdown = !showCalendarDropdown}
+                      tabindex="0"
+                    >
+                        <div
+                          class="rounded-sm w-3 h-3"
+                          style="background-color: {$calendars.get($editEvent.calendarId).color};">
+                        </div>
+                        <p class="text-sm ml-2">{$calendars.get($editEvent.calendarId).name}</p>
+                    </div>
+                {/if}
             </div>
 
             <div class="flex w-full mt-auto">
@@ -193,9 +256,17 @@
                       on:click={saveEvent}>
                         <p class="font-semibold text-md">
                             {#if $editEvent.id}
-                                Save
+                                {#if savingEvent}
+                                    Saving...
+                                {:else}
+                                    Save
+                                {/if}
                             {:else}
-                                Create event
+                                {#if savingEvent}
+                                    Creating...
+                                {:else}
+                                    Create event
+                                {/if}
                             {/if}
                         </p>
                     </button>

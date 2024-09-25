@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { calendars, commandMenuOpen, events, userInfo } from '$lib/stores';
-  import type { Calendar, CreateEvent, IdpUser, User } from '$lib/types';
+  import { calendars, commandMenuOpen, editEvent, events, selectedPosition, userInfo } from '$lib/stores';
+  import type { Calendar, Event, IdpUser, User } from '$lib/types';
   import { convertToEvent, getCalendarsArray, getDateString, getTimeRange } from '$lib/utils';
   import { API_HOST } from '$lib/vars';
 
@@ -21,7 +21,7 @@
   let eventGenerationLoading = false;
   let eventGenerationError = false;
 
-  let generatedEvent: CreateEvent;
+  let generatedEvent: Event;
 
   $: page = pages[pages.length - 1]
 
@@ -153,6 +153,13 @@
         const eventsJson = await newEvents.json();
         events.set(eventsJson.map((eventJson: any) => convertToEvent(eventJson)));
       }
+    }
+    else {
+      editEvent.set({
+        ...generatedEvent,
+        calendarId: selectedCalendarId,
+      });
+      selectedPosition.set(undefined);
     }
 
     value = '0';

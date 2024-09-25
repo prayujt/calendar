@@ -1,10 +1,20 @@
 <script lang="ts">
+    import { onMount } from 'svelte';
+
     import { calendars, selectedCalendars, userInfo } from '$lib/stores';
     import { getCalendarsArray } from '$lib/utils';
 
     import SidebarTasks from './SidebarTasks.svelte';
 
     let isLoaded = false;
+    let calendarsMap = new Map<string, boolean>();
+
+    onMount(() => {
+        const calendarsArr = getCalendarsArray();
+        for (const calendar of calendarsArr) {
+            calendarsMap.set(calendar.id, true);
+        }
+    });
 
     const toggleCalendar = (id: string) => {
         const tempSelected = new Set($selectedCalendars);
@@ -59,18 +69,26 @@
             <SidebarTasks />
         </div>
 
-        <div class="flex flex-col items-center mt-4 mb-4">
-            <p class="text-sm text-gray-600 mb-2 select-none">Calendars</p>
-            {#each getCalendarsArray() as calendar}
-                <div class="text-center min-w-28 max-w-36 mb-1">
-                    <div
-                        class={`${$selectedCalendars.has(calendar.id) ? 'bg-blue-600 text-white' : 'bg-gray-200 text-black'} rounded-md cursor-pointer select-none transition-colors duration-250 ease-in-out px-2 py-1`}
-                        on:click={() => toggleCalendar(calendar.id)}
-                        >
-                        <p class="text-sm">{calendar.name}</p>
+        <div class="flex flex-col mt-4 mb-4">
+            <p class="text-sm ml-2 mb-2 text-gray-600 select-none">Calendars</p>
+            <div>
+                {#each getCalendarsArray() as calendar}
+                    <div class="flex mb-2 items-center cursor-pointer w-min">
+                        <input
+                          tabindex="0"
+                          type="checkbox"
+                          on:click={() => toggleCalendar(calendar.id)}
+                          checked={$selectedCalendars.has(calendar.id)}
+                          class="cursor-pointer w-4 h-4 border-gray-300 rounded text-white"
+                          style={`accent-color: ${calendar.color};`}/>
+                            <button on:click={() => toggleCalendar(calendar.id)}>
+                                <p class="ms-2 text-sm font-medium text-gray-900">
+                                    {calendar.name}
+                                </p>
+                            </button>
                     </div>
-                </div>
-            {/each}
+                {/each}
+            </div>
         </div>
     </div>
 </aside>

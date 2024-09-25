@@ -110,7 +110,7 @@
                 <p class="text-sm">{task.title}</p>
                 <div class="flex items-center">
                     <div
-                      class="rounded-full w-2 h-2 fill-blue"
+                      class="rounded-sm w-2 h-2 fill-blue"
                       style="background-color: {$calendars.get(task.calendarId).color};">
                     </div>
                     <p class="text-xs ml-2">{$calendars.get(task.calendarId).name}</p>

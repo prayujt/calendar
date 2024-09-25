@@ -106,7 +106,7 @@
         </div>
         <div class="flex items-center ml-auto mt-auto">
             <div
-              class="rounded-full w-3 h-3 fill-blue"
+              class="rounded-sm w-3 h-3"
               style="background-color: {$calendars.get($selectedEvent.calendarId).color};">
             </div>
             <p class="text-sm ml-2">{$calendars.get($selectedEvent.calendarId).name}</p>
