@@ -116,7 +116,7 @@
   on:click={() => setSelectedEvent(event)}
 >
     <div
-      style="height: {position.height}px; width: {position.width}px; border-color: {$calendars.get(event.calendarId).color}"
+      style="height: {position.height}px; width: {position.width}px; background-color: {$calendars.get(event.calendarId).color}"
       class="shadow-lg cursor-pointer transition-fade rounded-md overflow-hidden select-none bg-blue-200"
     >
         <div class="flex flex-col h-full p-2">
