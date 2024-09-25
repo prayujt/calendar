@@ -1,8 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { calendars, commandMenuOpen, events, userInfo } from '$lib/stores';
-  import type { Calendar, IdpUser, User } from '$lib/types';
-  import { convertToEvent, getCalendarsArray } from '$lib/utils';
+  import type { Calendar, CreateEvent, IdpUser, User } from '$lib/types';
+  import { convertToEvent, getCalendarsArray, getDateString, getTimeRange } from '$lib/utils';
   import { API_HOST } from '$lib/vars';
 
   import Sidebar from '$components/Sidebar.svelte';
@@ -20,6 +20,8 @@
 
   let eventGenerationLoading = false;
   let eventGenerationError = false;
+
+  let generatedEvent: CreateEvent;
 
   $: page = pages[pages.length - 1]
 
@@ -51,8 +53,8 @@
   const isMac = typeof navigator !== 'undefined' ? navigator.userAgent.includes('Mac') : false;
 
   const keyPressEvent = async (event: KeyboardEvent) => {
-    if (event.ctrlKey && event.key === 'j' && page !== 'newEvent') event.preventDefault();
-    if (event.ctrlKey && event.key === 'k' && page !== 'newEvent' && $commandMenuOpen) event.preventDefault();
+    if (event.ctrlKey && event.key === 'j') event.preventDefault();
+    if (event.ctrlKey && event.key === 'k' && $commandMenuOpen) event.preventDefault();
 
     if ((isMac ? event.metaKey : event.ctrlKey) && event.key === 'k' && !$commandMenuOpen) {
       event.preventDefault();
@@ -80,48 +82,85 @@
         value = ((val - 1 + getCalendarsArray().length) % getCalendarsArray().length).toString();
       }
     }
-    else if (search && page == 'createEvent') {
+    else if (search && page === 'createEvent') {
       eventGenerationError = false;
       if (event.key === 'Enter') {
-          eventGenerationLoading = true;
-          try {
-            if (!selectedCalendarId) {
-              const defaultCalendar: Calendar = Array.from($calendars.values()).find((calendar) => calendar.isDefault)
-              selectedCalendarId = defaultCalendar.id;
-            }
-
-            const eventResponse  = await fetch(`${API_HOST}/events/generate`, {
-                method: 'POST',
-                body: JSON.stringify({
-                  content: search,
-                  calendarId: selectedCalendarId,
-                }),
-                credentials: 'include',
-              })
-              const eventJson = await eventResponse.json();
-              events.set([...$events, convertToEvent(eventJson)]);
-              commandMenuOpen.set(false);
-              pages = [];
-              search = '';
-              value = '0';
-              eventGenerationLoading = false;
-
-              if (eventJson.recurrenceId) {
-                const newEvents  = await fetch(`${API_HOST}/events`, {
-                  credentials: 'include',
-                })
-                const eventsJson = await newEvents.json();
-                events.set(eventsJson.map((eventJson: any) => convertToEvent(eventJson)));
-              }
-          } catch (error) {
-              console.error('Error creating new event:', error);
-              eventGenerationLoading = false;
-              eventGenerationError = true;
+        eventGenerationLoading = true;
+        try {
+          if (!selectedCalendarId) {
+            const defaultCalendar: Calendar = Array.from($calendars.values()).find((calendar) => calendar.isDefault)
+            selectedCalendarId = defaultCalendar.id;
           }
+
+          const eventResponse  = await fetch(`${API_HOST}/events/generate`, {
+            method: 'POST',
+            body: JSON.stringify({
+              content: search,
+              calendarId: selectedCalendarId,
+            }),
+            credentials: 'include',
+          })
+          if (eventResponse.status !== 200) {
+            eventGenerationError = true;
+            eventGenerationLoading = false;
+            return;
+          }
+          generatedEvent = convertToEvent(await eventResponse.json());
+          eventGenerationLoading = false;
+          value = '0';
+          search = '';
+          pages = [...pages, 'approveEvent']
+        } catch (error) {
+          console.error('Error creating new event:', error);
+          eventGenerationLoading = false;
+          eventGenerationError = true;
+        }
+      }
+    }
+    else if (page === 'approveEvent') {
+      if (event.ctrlKey && event.key === 'j') {
+        const val = parseInt(value);
+        value = ((val + 1) % 2).toString();
+      }
+      if (event.ctrlKey && event.key === 'k') {
+        const val = parseInt(value);
+        value = ((val + 1) % 2).toString();
       }
     }
   };
 
+  const submitEvent = async(approve: boolean) => {
+    if (!generatedEvent) return;
+    if (approve) {
+      eventGenerationLoading = true;
+      const res = await fetch(`${API_HOST}/events`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          ...generatedEvent,
+          calendarId: selectedCalendarId,
+        })
+      });
+      const eventJson = await res.json();
+      events.set([...$events, convertToEvent(eventJson)]);
+
+      if (eventJson.recurrenceId) {
+        const newEvents  = await fetch(`${API_HOST}/events`, {
+          credentials: 'include',
+        })
+        const eventsJson = await newEvents.json();
+        events.set(eventsJson.map((eventJson: any) => convertToEvent(eventJson)));
+      }
+    }
+
+    value = '0';
+    search = '';
+    pages = [];
+    eventGenerationLoading = false;
+    commandMenuOpen.set(false);
+  }
 </script>
 
 <svelte:head>
@@ -137,7 +176,7 @@
   bind:value={value}
   label="Command Menu"
 >
-    <div class={`bg-white rounded-lg shadow-2xl h-1/2 w-1/3 overflow-y-auto opacity-90`}>
+    <div class={`bg-white rounded-lg shadow-2xl h-1/2 w-1/3 overflow-y-auto opacity-95`}>
         <Command.Input
           bind:value={search}
           class="selection:text-white selection:bg-orange-500 text-lg mt-4 mx-3 w-[calc(100%-1.5rem)] focus:outline-none focus:border-transparent"
@@ -225,9 +264,61 @@
                 {/if}
                 {#if eventGenerationError}
                     <div class="flex flex-col items-center mt-12">
-                        <p class='text-red-500 text-md mb-6'>There was an error...</p>
-                        <p class='text-gray-500 text-md'>Please try again</p>
+                        <p class='text-red-500 text-md mb-6'>Error generating the event...</p>
+                        <p class='text-gray-500 text-md'>Please be more specific</p>
                     </div>
+                {/if}
+            {:else if page == 'approveEvent'}
+                <Command.Group heading="Choices" class="m-4 text-sm text-gray-500">
+                    <Command.Item
+                      onSelect={() => submitEvent(true)}
+                      class={`rounded-lg mt-1 -mx-1 py-3 text-md text-gray-800 ${value === '0' && 'bg-gray-100'} hover:bg-gray-100`}
+                      value={'0'}
+                      >
+                        <p class="ml-2">
+                            Approve
+                        </p>
+                    </Command.Item>
+                    <Command.Item
+                      onSelect={() => submitEvent(false)}
+                      class={`rounded-lg mt-1 -mx-1 py-3 text-md text-gray-800 ${value === '1'.toString() && 'bg-gray-100'} hover:bg-gray-100`}
+                      value={'1'}
+                      >
+                        <p class="ml-2">
+                            Reject
+                        </p>
+                    </Command.Item>
+                </Command.Group>
+
+                {#if generatedEvent}
+                    <div
+                      style="background-color: {$calendars.get(selectedCalendarId).color}"
+                      class="m-4 shadow-lg cursor-pointer transition-fade rounded-md overflow-hidden select-none bg-blue-200"
+                    >
+                        <div class="flex flex-col h-full p-2">
+                            <div class="overflow-hidden">
+                                <p class="text-xs font-semibold">{generatedEvent.title}</p>
+                            </div>
+                            <p class="text-xs">
+                                {getDateString(generatedEvent.date)}
+                            </p>
+                            <p class="text-xs">{getTimeRange(generatedEvent.date, generatedEvent.duration)}</p>
+                            <p class="text-xs mt-4">{generatedEvent.description || "No Description"}</p>
+                            {#if generatedEvent.recurring}
+                              <p class="text-xs mt-4">Recurring Event</p>
+                            {/if}
+                        </div>
+                    </div>
+                    {#if eventGenerationLoading}
+                        <div class="flex flex-col justify-center items-center h-20">
+                            <p class='text-gray-500 text-md mb-6'>Creating event...</p>
+                            <div class='flex space-x-2 justify-center items-center'>
+                                <div class='h-4 w-4 bg-blue-400 rounded-full animate-bounce [animation-delay:-0.3s]'></div>
+                                <div class='h-4 w-4 bg-blue-400 rounded-full animate-bounce [animation-delay:-0.15s]'></div>
+                                <div class='h-4 w-4 bg-blue-400 rounded-full animate-bounce'></div>
+                            </div>
+                        </div>
+                    {/if}
                 {/if}
             {/if}
         </Command.List>

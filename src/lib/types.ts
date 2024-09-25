@@ -36,6 +36,16 @@ export interface Event {
     recurrenceId: string;
 }
 
+export interface CreateEvent {
+    id: string;
+    calendarId: string;
+    date: Date;
+    title: string;
+    description: string;
+    duration: number;
+    recurring: boolean;
+}
+
 export interface EventPosition {
     top: number;
     left: number;

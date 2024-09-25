@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { fade } from 'svelte/transition';
 
+  import type { CreateEvent } from '$lib/types';
   import { editEvent, events, selectedPosition } from '$lib/stores';
   import { API_HOST } from '$lib/vars';
   import { convertToEvent } from '$lib/utils';
@@ -60,10 +61,10 @@
     if (!$editEvent.title) {
       return;
     }
-    const event = {
+    const event: Event = {
       ...$editEvent,
       date: new Date(`${date} ${startTime}`),
-      duration: (new Date(`${date} ${endTime}`).getTime() - new Date(`${date} ${startTime}`).getTime()) / 60000
+      duration: (new Date(`${date} ${endTime}`).getTime() - new Date(`${date} ${startTime}`).getTime()) / 60000,
     };
 
     if (event.id) {
@@ -78,12 +79,16 @@
       events.set([...$events].map((e) => (e.id === event.id ? event : e)));
     }
     else {
+      const createEvent: CreateEvent = {
+        ...event,
+        recurring: false
+      }
       const res = await fetch(`${API_HOST}/events`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(event)
+        body: JSON.stringify(createEvent)
       });
       const eventJson = await res.json();
       events.set([...$events, convertToEvent(eventJson)]);

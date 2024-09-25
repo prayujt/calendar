@@ -65,11 +65,11 @@ export const compareDates = (date1: Date, date2: Date): boolean =>
 /**
  * Converts an ISO string event payload to an Event object
  */
-export const convertToEvent = (event: any): Event => {
+export const convertToEvent = (event: any): any => {
     return {
         ...event,
         date: new Date(event.date),
-    } as Event;
+    };
 };
 
 /**

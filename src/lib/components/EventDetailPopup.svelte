@@ -2,7 +2,7 @@
   import { fade } from 'svelte/transition';
 
   import { API_HOST } from '$lib/vars';
-  import { getDateString, getTimeRange } from '$lib/utils';
+  import { convertToEvent, getDateString, getTimeRange } from '$lib/utils';
   import { calendars, editEvent, events, selectedEvent, selectedPosition, showEventDetails } from '$lib/stores';
 
   export let gridDiv: HTMLElement;
@@ -36,8 +36,16 @@
       credentials: 'include',
     });
     if (response.ok) {
+      if ($selectedEvent.recurrenceId) {
+        const newEvents  = await fetch(`${API_HOST}/events`, {
+          credentials: 'include',
+        })
+        const eventsJson = await newEvents.json();
+        events.set(eventsJson.map((eventJson: any) => convertToEvent(eventJson)));
+      }
+      else events.update((prev) => prev.filter((event) => event.id !== eventId));
+
       showEventDetails.set(false);
-      events.update((prev) => prev.filter((event) => event.id !== eventId));
     }
   };
 
