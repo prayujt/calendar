@@ -7,7 +7,7 @@
 
   import type { Calendar, Event, EventPosition } from '$lib/types';
   import { calendars, dragging, editEvent, events, eventPositions, gridItemHeight, gridItemWidth, selectedCalendars, selectedPosition, showEventDetails } from '$lib/stores';
-  import { compareDates, convertToEvent, getTimeString, getCurrentHour, getMinuteFraction } from '$lib/utils';
+  import { compareDates, fetchEvents, getTimeString, getCurrentHour, getMinuteFraction } from '$lib/utils';
   import { API_HOST, VITE_ENVIRONMENT } from '$lib/vars';
 
 
@@ -74,11 +74,7 @@
               }, calendarMap)
           );
 
-          const eventResponse  = await fetch(`${API_HOST}/events`, {
-            credentials: 'include',
-          })
-          const eventsJson = await eventResponse.json();
-          events.set(eventsJson.map((eventJson: any) => convertToEvent(eventJson)));
+          await fetchEvents();
       } catch (error) {
           console.error('Error fetching events', error);
       }

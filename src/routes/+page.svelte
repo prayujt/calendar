@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { calendars, commandMenuOpen, editEvent, events, selectedPosition, userInfo } from '$lib/stores';
   import type { Calendar, Event, IdpUser, User } from '$lib/types';
-  import { convertToEvent, getCalendarsArray, getDateString, getTimeRange } from '$lib/utils';
+  import { convertToEvent, fetchEvents, getCalendarsArray, getDateString, getTimeRange } from '$lib/utils';
   import { API_HOST } from '$lib/vars';
 
   import Sidebar from '$components/Sidebar.svelte';
@@ -147,13 +147,7 @@
       const eventJson = await res.json();
       events.set([...$events, convertToEvent(eventJson)]);
 
-      if (eventJson.recurrenceId) {
-        const newEvents  = await fetch(`${API_HOST}/events`, {
-          credentials: 'include',
-        })
-        const eventsJson = await newEvents.json();
-        events.set(eventsJson.map((eventJson: any) => convertToEvent(eventJson)));
-      }
+      if (eventJson.recurrenceId) await fetchEvents();
     }
     else {
       editEvent.set({

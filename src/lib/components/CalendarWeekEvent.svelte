@@ -3,8 +3,8 @@
   import { onDestroy, onMount } from 'svelte';
 
   import type { Event, EventPosition } from '$lib/types';
-  import { convertToEvent, getTimeRange } from '$lib/utils';
-  import { calendars, dragging, editEvent, events, eventPositions, gridItemHeight, selectedEvent, selectedPosition, showEventDetails } from '$lib/stores';
+  import { fetchEvents, getTimeRange } from '$lib/utils';
+  import { calendars, dragging, editEvent, eventPositions, gridItemHeight, selectedEvent, selectedPosition, showEventDetails } from '$lib/stores';
   import { API_HOST } from '$lib/vars';
 
   export let event: Event;
@@ -79,13 +79,7 @@
       credentials: 'include',
     });
 
-    if (recurring) {
-      const newEvents  = await fetch(`${API_HOST}/events`, {
-        credentials: 'include',
-      })
-      const eventsJson = await newEvents.json();
-      events.set(eventsJson.map((eventJson: any) => convertToEvent(eventJson)));
-    }
+    if (recurring) await fetchEvents();
   }
 
   /**

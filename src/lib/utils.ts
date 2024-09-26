@@ -1,6 +1,7 @@
 import { get } from "svelte/store";
 
-import { calendars } from "./stores";
+import { calendars, events } from "./stores";
+import { API_HOST } from "./vars";
 
 /**
  * Get the current hour
@@ -99,4 +100,15 @@ export const getCalendarsArray = () => {
     return Array.from(get(calendars).values()).sort((a, b) =>
         a.name === "Personal" ? -1 : b.name === "Personal" ? 1 : 0,
     );
+};
+
+/**
+ * Utility function for fetching all events and updating the events store
+ */
+export const fetchEvents = async () => {
+    const newEvents = await fetch(`${API_HOST}/events`, {
+        credentials: "include",
+    });
+    const eventsJson = await newEvents.json();
+    events.set(eventsJson.map((eventJson: any) => convertToEvent(eventJson)));
 };

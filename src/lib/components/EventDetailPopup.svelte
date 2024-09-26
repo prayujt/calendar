@@ -2,7 +2,7 @@
   import { fade } from 'svelte/transition';
 
   import { API_HOST } from '$lib/vars';
-  import { convertToEvent, getDateString, getTimeRange } from '$lib/utils';
+  import { fetchEvents, getDateString, getTimeRange } from '$lib/utils';
   import { calendars, editEvent, events, selectedEvent, selectedPosition, showEventDetails } from '$lib/stores';
 
   export let gridDiv: HTMLElement;
@@ -40,13 +40,7 @@
       credentials: 'include',
     });
     if (response.ok) {
-      if (recurring) {
-        const newEvents  = await fetch(`${API_HOST}/events`, {
-          credentials: 'include',
-        })
-        const eventsJson = await newEvents.json();
-        events.set(eventsJson.map((eventJson: any) => convertToEvent(eventJson)));
-      }
+      if (recurring) await fetchEvents();
       else events.update((prev) => prev.filter((event) => event.id !== eventId));
     }
     showEventDetails.set(false);
@@ -105,7 +99,10 @@
                 {getDateString($selectedEvent.date)} ⋅ {getTimeRange($selectedEvent.date, $selectedEvent.duration)}
             </p>
 
-            <p class="text-md ml-4">{$selectedEvent.description}</p>
+            {#each $selectedEvent.description.split('\n') as line}
+                <p class="text-md ml-4">{line}</p>
+                <br>
+            {/each}
         </div>
         <div class="flex items-center ml-auto mt-auto">
             <div

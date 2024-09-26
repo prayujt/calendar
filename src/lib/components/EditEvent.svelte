@@ -5,7 +5,7 @@
   import type { Event } from '$lib/types';
   import { calendars, editEvent, events, selectedPosition } from '$lib/stores';
   import { API_HOST } from '$lib/vars';
-  import { convertToEvent, getCalendarsArray } from '$lib/utils';
+  import { convertToEvent, fetchEvents, getCalendarsArray } from '$lib/utils';
 
   export let gridDiv: HTMLElement;
 
@@ -85,16 +85,11 @@
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(event)
+        body: JSON.stringify(event),
+        credentials: 'include',
       });
 
-      if (recurring) {
-        const newEvents  = await fetch(`${API_HOST}/events`, {
-          credentials: 'include',
-        })
-        const eventsJson = await newEvents.json();
-        events.set(eventsJson.map((eventJson: any) => convertToEvent(eventJson)));
-      }
+      if (recurring) await fetchEvents();
       else events.set([...$events].map((e) => (e.id === event.id ? event : e)));
     }
     else {
@@ -108,13 +103,7 @@
       });
       const eventJson = await res.json();
 
-      if (event.recurring) {
-        const newEvents  = await fetch(`${API_HOST}/events`, {
-          credentials: 'include',
-        })
-        const eventsJson = await newEvents.json();
-        events.set(eventsJson.map((eventJson: any) => convertToEvent(eventJson)));
-      }
+      if (event.recurring) await fetchEvents();
       else events.set([...$events, convertToEvent(eventJson)]);
     }
     savingEvent = false;
@@ -227,20 +216,29 @@
                 {#if showCalendarDropdown}
                     <div class="flex flex-col justify-center shadow-lg w-min p-2 select-none cursor-pointer">
                         {#each getCalendarsArray() as calendar (calendar.id)}
-                            <div
-                              class="mt-2 flex items-center"
+                            <button
+                              class="mt-2 p-1 flex items-center hover:bg-gray-200 rounded-lg w-full"
                               on:click={() => selectCalendar(calendar.id)}>
                                 <div
                                   class="rounded-sm w-3 h-3"
                                   style="background-color: {calendar.color};">
                                 </div>
-                                <p class="text-sm ml-2">{calendar.name}</p>
-                            </div>
+                                <div class="flex items-center">
+                                    <p class="text-sm ml-2">
+                                        {calendar.name}
+                                    </p>
+                                    {#if calendar.id === $editEvent.calendarId}
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="ml-1 size-4">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                                        </svg>
+                                    {/if}
+                                </div>
+                            </button>
                         {/each}
                     </div>
                 {:else}
-                    <div
-                      class="mt-2 ml-1 flex items-center cursor-pointer select-none w-min"
+                    <button
+                      class="mt-2 flex items-center cursor-pointer select-none w-min hover:border border-gray-300 rounded-md p-1 hover:bg-gray-200"
                       on:click={() => showCalendarDropdown = !showCalendarDropdown}
                       tabindex="0"
                     >
@@ -249,7 +247,7 @@
                           style="background-color: {$calendars.get($editEvent.calendarId).color};">
                         </div>
                         <p class="text-sm ml-2">{$calendars.get($editEvent.calendarId).name}</p>
-                    </div>
+                    </button>
                 {/if}
             </div>
 
@@ -268,17 +266,9 @@
                       on:click={saveEvent}>
                         <p class="font-semibold text-md">
                             {#if $editEvent.id}
-                                {#if savingEvent}
-                                    Saving...
-                                {:else}
-                                    Save
-                                {/if}
+                                {savingEvent ? 'Saving...' : 'Save'}
                             {:else}
-                                {#if savingEvent}
-                                    Creating...
-                                {:else}
-                                    Create event
-                                {/if}
+                                {savingEvent ? 'Creating...' : 'Create event'}
                             {/if}
                         </p>
                     </button>

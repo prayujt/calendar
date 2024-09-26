@@ -24,6 +24,8 @@ export const showEventDetails = writable(false);
 export const selectedEvent = writable<Event>(undefined);
 export const selectedPosition = writable<EventPosition>(undefined);
 
+export const showCreateTask = writable(false);
+
 export const editEvent = writable<Event>(undefined);
 
 export const dragging = writable<string>(undefined);
