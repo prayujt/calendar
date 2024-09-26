@@ -2,6 +2,21 @@
   import { onMount } from 'svelte';
   import { fade } from 'svelte/transition';
 
+  import LoaderCircle from "lucide-svelte/icons/loader-circle";
+  import CalendarIcon from "lucide-svelte/icons/calendar";
+
+  import { Button } from "$lib/scn-components/ui/button/index.js";
+  import { Calendar } from "$lib/scn-components/ui/calendar/index.js";
+  import * as Popover from "$lib/scn-components/ui/popover/index.js";
+
+  import {
+    DateFormatter,
+    type DateValue,
+    fromDate,
+    getLocalTimeZone,
+  } from "@internationalized/date";
+  import { cn } from "$lib/scn-utils";
+
   import type { Event } from '$lib/types';
   import { calendars, editEvent, events, selectedPosition } from '$lib/stores';
   import { API_HOST } from '$lib/vars';
@@ -9,7 +24,12 @@
 
   export let gridDiv: HTMLElement;
 
-  let date: string;
+  const df = new DateFormatter("en-US", {
+    dateStyle: "long"
+  });
+
+  let date: DateValue | undefined = undefined;
+
   let startTime: string;
   let endTime: string;
 
@@ -50,7 +70,7 @@
 
   const updateInformation = () => {
     if (!$editEvent) return;
-    date = $editEvent.date.toLocaleDateString('en-CA');
+    date = fromDate($editEvent.date, getLocalTimeZone());
     startTime = $editEvent.date.toLocaleTimeString('en-CA', {
       hour: '2-digit',
       minute: '2-digit',
@@ -69,10 +89,11 @@
       return;
     }
     savingEvent = true;
+    const dateString = date.toDate(getLocalTimeZone()).toISOString().split('T')[0]
     const event: Event = {
       ...$editEvent,
-      date: new Date(`${date} ${startTime}`),
-      duration: (new Date(`${date} ${endTime}`).getTime() - new Date(`${date} ${startTime}`).getTime()) / 60000,
+      date: new Date(`${dateString} ${startTime}`),
+      duration: (new Date(`${dateString} ${endTime}`).getTime() - new Date(`${dateString} ${startTime}`).getTime()) / 60000,
     };
 
     if (event.id) {
@@ -124,7 +145,7 @@
 </script>
 
 <div
-  class={`fixed bg-white rounded-lg shadow-2xl p-2 z-30 ${!$selectedPosition ? 'inset-0 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-min h-min' : 'w-min h-min'}`}
+  class={`fixed bg-white rounded-lg shadow-2xl p-2 z-30 ${!$selectedPosition ? 'inset-0 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-min h-min' : 'w-min h-min min-w-96'}`}
   style="top: {top}px; left: {left}px;"
   bind:this={component}
   in:fade={{ duration: 100 }}
@@ -156,40 +177,53 @@
                     </div>
                 </div>
 
-                <div class="flex mt-6">
-                    <div>
-                      <input
-                        class="text-md pl-1 focus:outline-none"
-                        tabindex="-1"
-                        type="date"
-                        bind:value={date}
-                        placeholder="YYYY-MM-DD"
-                      />
+                <div class="flex-col mt-4">
+                    <div class="mr-2 w-44">
+                        <Popover.Root>
+                            <Popover.Trigger asChild let:builder>
+                                <Button
+                                  variant="outline"
+                                  class={cn(
+                                    "w-max justify-start text-left font-normal",
+                                    !date && "text-muted-foreground"
+                                  )}
+                                  builders={[builder]}
+                                >
+                                    <CalendarIcon class="mr-2 h-4 w-4" />
+                                    {date ? df.format(date.toDate(getLocalTimeZone())) : "Pick a date"}
+                                </Button>
+                            </Popover.Trigger>
+                            <Popover.Content class="w-auto p-0">
+                                <Calendar bind:value={date} initialFocus />
+                            </Popover.Content>
+                        </Popover.Root>
                     </div>
-                    <div class="flex items-center">
-                        <input
-                          type="time"
-                          class="bg-gray-50 border leading-none border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 pr-8 focus:outline-none"
-                          min="00:00" max="23:59"
-                          bind:value={startTime}
-                          required />
-                        <svg class="-ml-6 w-5 h-5 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
-                            <path fill-rule="evenodd" d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm11-4a1 1 0 1 0-2 0v4a1 1 0 0 0 .293.707l3 3a1 1 0 0 0 1.414-1.414L13 11.586V8Z" clip-rule="evenodd"/>
-                        </svg>
-                    </div>
-                    <div class="flex items-center">
-                        <p class="mx-2 -mt-1 text-lg">-</p>
-                    </div>
-                    <div class="flex items-center">
-                        <input
-                          type="time"
-                          class="bg-gray-50 border leading-none border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 pr-8 focus:outline-none"
-                          min="00:00" max="23:59"
-                          bind:value={endTime}
-                          required />
-                        <svg class="-ml-6 w-5 h-5 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
-                            <path fill-rule="evenodd" d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm11-4a1 1 0 1 0-2 0v4a1 1 0 0 0 .293.707l3 3a1 1 0 0 0 1.414-1.414L13 11.586V8Z" clip-rule="evenodd"/>
-                        </svg>
+                    <div class="flex mt-2">
+                        <div class="flex items-center">
+                            <input
+                              type="time"
+                              class="bg-gray-50 border leading-none border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 pr-8 focus:outline-none"
+                              min="00:00" max="23:59"
+                              bind:value={startTime}
+                              required />
+                            <svg class="-ml-6 w-5 h-5 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                                <path fill-rule="evenodd" d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm11-4a1 1 0 1 0-2 0v4a1 1 0 0 0 .293.707l3 3a1 1 0 0 0 1.414-1.414L13 11.586V8Z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <div class="flex items-center">
+                            <p class="mx-2 -mt-1 text-lg">-</p>
+                        </div>
+                        <div class="flex items-center">
+                            <input
+                              type="time"
+                              class="bg-gray-50 border leading-none border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 pr-8 focus:outline-none"
+                              min="00:00" max="23:59"
+                              bind:value={endTime}
+                              required />
+                            <svg class="-ml-6 w-5 h-5 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                                <path fill-rule="evenodd" d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm11-4a1 1 0 1 0-2 0v4a1 1 0 0 0 .293.707l3 3a1 1 0 0 0 1.414-1.414L13 11.586V8Z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
                     </div>
                 </div>
 
@@ -267,17 +301,33 @@
                         </p>
                     </button>
 
-                    <button
-                      class="bg-blue-600 text-white rounded-md px-4 py-1 hover:bg-blue-700"
-                      on:click={saveEvent}>
-                        <p class="font-semibold text-md">
-                            {#if $editEvent.id}
-                                {savingEvent ? 'Saving...' : 'Save'}
+                    <Button
+                      on:click={saveEvent}
+                    >
+                        {#if $editEvent.id}
+                            {#if savingEvent}
+                                <LoaderCircle class="mr-2 w-4 h-4 text-white" />
+                                <p class="text-white">
+                                    Saving
+                                </p>
                             {:else}
-                                {savingEvent ? 'Creating...' : 'Create event'}
+                                <p class="text-white">
+                                    Save
+                                </p>
                             {/if}
-                        </p>
-                    </button>
+                        {:else}
+                            {#if savingEvent}
+                                <LoaderCircle class="mr-2 w-4 h-4 text-white" />
+                                <p class="text-white">
+                                    Creating
+                                </p>
+                            {:else}
+                                <p class="text-white">
+                                    Create
+                                </p>
+                            {/if}
+                        {/if}
+                    </Button>
                 </div>
             </div>
         </div>
