@@ -245,7 +245,7 @@
                 <div class="ml-auto">
                   <button
                       class="text-gray-500 rounded-md px-4 py-1 hover:text-gray-600"
-                      on:click={saveEvent}>
+                      on:click={() => editEvent.set(undefined)}>
                         <p class="font-semibold text-md">
                             Cancel
                         </p>
