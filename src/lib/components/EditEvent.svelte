@@ -124,7 +124,7 @@
 </script>
 
 <div
-  class={`fixed bg-white rounded-lg shadow-2xl p-2 z-30 ${!$selectedPosition ? 'inset-0 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-1/4 h-1/2' : 'w-min h-min'}`}
+  class={`fixed bg-white rounded-lg shadow-2xl p-2 z-30 ${!$selectedPosition ? 'inset-0 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-min h-min' : 'w-min h-min'}`}
   style="top: {top}px; left: {left}px;"
   bind:this={component}
   in:fade={{ duration: 100 }}
@@ -166,24 +166,30 @@
                         placeholder="YYYY-MM-DD"
                       />
                     </div>
-                    <div class="ml-8">
+                    <div class="flex items-center">
                         <input
-                          class="text-md focus:outline-none"
-                          tabindex="-1"
                           type="time"
+                          class="bg-gray-50 border leading-none border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 pr-8 focus:outline-none"
+                          min="00:00" max="23:59"
                           bind:value={startTime}
-                        />
+                          required />
+                        <svg class="-ml-6 w-5 h-5 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                            <path fill-rule="evenodd" d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm11-4a1 1 0 1 0-2 0v4a1 1 0 0 0 .293.707l3 3a1 1 0 0 0 1.414-1.414L13 11.586V8Z" clip-rule="evenodd"/>
+                        </svg>
                     </div>
-                    <p class="mx-2">
-                       -
-                    </p>
-                    <div>
+                    <div class="flex items-center">
+                        <p class="mx-2 -mt-1 text-lg">-</p>
+                    </div>
+                    <div class="flex items-center">
                         <input
-                          class="text-md text-black focus:outline-none"
-                          tabindex="-1"
                           type="time"
+                          class="bg-gray-50 border leading-none border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 pr-8 focus:outline-none"
+                          min="00:00" max="23:59"
                           bind:value={endTime}
-                        />
+                          required />
+                        <svg class="-ml-6 w-5 h-5 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                            <path fill-rule="evenodd" d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm11-4a1 1 0 1 0-2 0v4a1 1 0 0 0 .293.707l3 3a1 1 0 0 0 1.414-1.414L13 11.586V8Z" clip-rule="evenodd"/>
+                        </svg>
                     </div>
                 </div>
 
