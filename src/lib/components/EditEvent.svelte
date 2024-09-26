@@ -76,7 +76,11 @@
     };
 
     if (event.id) {
-      await fetch(`${API_HOST}/events/${event.id}`, {
+      let recurring = false;
+      if (event.recurrenceId) {
+        recurring = confirm('Do you want to update all future events as well?');
+      }
+      await fetch(`${API_HOST}/events/${event.id}?recurring=${recurring}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
@@ -84,7 +88,14 @@
         body: JSON.stringify(event)
       });
 
-      events.set([...$events].map((e) => (e.id === event.id ? event : e)));
+      if (recurring) {
+        const newEvents  = await fetch(`${API_HOST}/events`, {
+          credentials: 'include',
+        })
+        const eventsJson = await newEvents.json();
+        events.set(eventsJson.map((eventJson: any) => convertToEvent(eventJson)));
+      }
+      else events.set([...$events].map((e) => (e.id === event.id ? event : e)));
     }
     else {
       const res = await fetch(`${API_HOST}/events`, {

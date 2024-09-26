@@ -31,12 +31,16 @@
   };
 
   const deleteEvent = async (eventId: string) => {
-    const response = await fetch(`${API_HOST}/events/${eventId}?recurring=true`, {
+    // TODO: Replace with real modal
+    let recurring = false;
+    if ($selectedEvent.recurrenceId)
+      recurring = confirm('Do you want to delete all future recurring events as well?')
+    const response = await fetch(`${API_HOST}/events/${eventId}?recurring=${recurring}`, {
       method: 'DELETE',
       credentials: 'include',
     });
     if (response.ok) {
-      if ($selectedEvent.recurrenceId) {
+      if (recurring) {
         const newEvents  = await fetch(`${API_HOST}/events`, {
           credentials: 'include',
         })
@@ -44,9 +48,8 @@
         events.set(eventsJson.map((eventJson: any) => convertToEvent(eventJson)));
       }
       else events.update((prev) => prev.filter((event) => event.id !== eventId));
-
-      showEventDetails.set(false);
     }
+    showEventDetails.set(false);
   };
 
   $: component, width = component && component.getBoundingClientRect().width;

@@ -3,8 +3,8 @@
   import { onDestroy, onMount } from 'svelte';
 
   import type { Event, EventPosition } from '$lib/types';
-  import { getTimeRange } from '$lib/utils';
-  import { calendars, dragging, editEvent, eventPositions, gridItemHeight, selectedEvent, selectedPosition, showEventDetails } from '$lib/stores';
+  import { convertToEvent, getTimeRange } from '$lib/utils';
+  import { calendars, dragging, editEvent, events, eventPositions, gridItemHeight, selectedEvent, selectedPosition, showEventDetails } from '$lib/stores';
   import { API_HOST } from '$lib/vars';
 
   export let event: Event;
@@ -50,7 +50,7 @@
     }
   }
 
-  const handleMouseUp = () => {
+  const handleMouseUp = async () => {
     if (!dragged) return;
 
     mouseDown = false;
@@ -63,7 +63,11 @@
     });
     dragging.set(undefined);
 
-    fetch(`${API_HOST}/events/${event.id}`, {
+    let recurring = false;
+    if (event.recurrenceId) {
+      recurring = confirm('Do you want to update all future events to be at this time as well?');
+    }
+    await fetch(`${API_HOST}/events/${event.id}?recurring=${recurring}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -74,6 +78,14 @@
       }),
       credentials: 'include',
     });
+
+    if (recurring) {
+      const newEvents  = await fetch(`${API_HOST}/events`, {
+        credentials: 'include',
+      })
+      const eventsJson = await newEvents.json();
+      events.set(eventsJson.map((eventJson: any) => convertToEvent(eventJson)));
+    }
   }
 
   /**
