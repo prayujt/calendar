@@ -7,6 +7,8 @@
 
   import { Button } from "$lib/scn-components/ui/button/index.js";
   import { Calendar } from "$lib/scn-components/ui/calendar/index.js";
+  import { Checkbox } from "$lib/scn-components/ui/checkbox/index.js";
+  import { Label } from "$lib/scn-components/ui/label/index.js";
   import * as Popover from "$lib/scn-components/ui/popover/index.js";
 
   import {
@@ -239,18 +241,28 @@
 
             <div class="flex flex-col justify-center">
                 {#if !$editEvent.id}
-                    <div class="flex items-center mt-2 cursor-pointer w-min">
-                        <input
-                          tabindex="0"
-                          type="checkbox"
-                          bind:checked={$editEvent.recurring}
-                          class="cursor-pointer w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded"/>
-                        <button on:click={() => $editEvent.recurring = !$editEvent.recurring} tabindex="-1">
-                            <p class="ms-2 text-sm font-medium text-gray-900">
-                                Recurring
-                            </p>
-                        </button>
+                    <div class="flex items-center space-x-2">
+                      <Checkbox id="terms" bind:checked={$editEvent.recurring} aria-labelledby="terms-label" />
+                      <Label
+                        id="terms-label"
+                        for="terms"
+                        class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
+                        Recurring
+                      </Label>
                     </div>
+                    <!-- <div class="flex items-center mt-2 cursor-pointer w-min">
+                         <input
+                         tabindex="0"
+                         type="checkbox"
+                         bind:checked={$editEvent.recurring}
+                         class="cursor-pointer w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded"/>
+                         <button on:click={() => $editEvent.recurring = !$editEvent.recurring} tabindex="-1">
+                         <p class="ms-2 text-sm font-medium text-gray-900">
+                         Recurring
+                         </p>
+                         </button>
+                         </div> -->
                 {/if}
 
                 {#if showCalendarDropdown}
@@ -293,14 +305,12 @@
 
             <div class="flex w-full mt-auto">
                 <div class="ml-auto">
-                  <button
-                      class="text-gray-500 rounded-md px-4 py-1 hover:text-gray-600"
-                      on:click={() => editEvent.set(undefined)}>
-                        <p class="font-semibold text-md">
-                            Cancel
-                        </p>
-                    </button>
-
+                    <Button
+                      variant="ghost"
+                      on:click={() => editEvent.set(undefined)}
+                    >
+                        Cancel
+                    </Button>
                     <Button
                       on:click={saveEvent}
                     >
