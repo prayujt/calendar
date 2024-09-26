@@ -141,7 +141,8 @@
         body: JSON.stringify({
           ...generatedEvent,
           calendarId: selectedCalendarId,
-        })
+        }),
+        credentials: 'include',
       });
       const eventJson = await res.json();
       events.set([...$events, convertToEvent(eventJson)]);

@@ -92,7 +92,8 @@
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(event)
+        body: JSON.stringify(event),
+        credentials: 'include',
       });
       const eventJson = await res.json();
 
