@@ -234,14 +234,14 @@
                     </div>
                 </div>
 
-                <div class="flex-col mt-4">
-                    <div class="mr-2 w-44">
+                <div class="flex-col mt-4 w-full">
+                    <div class="mr-2 w-full">
                         <Popover.Root>
                             <Popover.Trigger asChild let:builder>
                                 <Button
                                   variant="outline"
                                   class={cn(
-                                    "w-max justify-start text-left font-normal",
+                                    "w-full justify-start text-left font-normal",
                                     !date && "text-muted-foreground"
                                   )}
                                   builders={[builder]}
