@@ -92,7 +92,7 @@
             selectedCalendarId = defaultCalendar.id;
           }
 
-          const eventResponse  = await fetch(`${API_HOST}/events/generate`, {
+          const eventResponse = await fetch(`${API_HOST}/events/generate`, {
             method: 'POST',
             body: JSON.stringify({
               content: search,

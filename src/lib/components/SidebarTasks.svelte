@@ -3,7 +3,7 @@
     import { fade } from 'svelte/transition';
 
     import { API_HOST } from '../vars';
-    import { calendars, showCreateTask, selectedCalendars, tasks } from '../stores';
+    import { calendars, editEvent, showCreateTask, showEventDetails, selectedCalendars, tasks } from '../stores';
     import { getDateString, getTimeString } from '../utils';
     import { TaskPriority, type Task } from '../types';
 
@@ -34,7 +34,7 @@
         <p class="text-sm text-gray-600 select-none">Tasks</p>
         <button
           class="bg-blue-700 text-white rounded-lg ml-4 p-1"
-          on:click={() => showCreateTask.set(true)}>
+          on:click={() => { editEvent.set(undefined); showEventDetails.set(false); showCreateTask.set(true)}}>
             <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" class="w-4 h-4">
                 <path fill-rule="evenodd" d="M12 3.75a.75.75 0 0 1 .75.75v6.75h6.75a.75.75 0 0 1 0 1.5h-6.75v6.75a.75.75 0 0 1-1.5 0v-6.75H4.5a.75.75 0 0 1 0-1.5h6.75V4.5a.75.75 0 0 1 .75-.75Z" clip-rule="evenodd"></path>
             </svg>

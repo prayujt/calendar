@@ -291,9 +291,11 @@
    * @param hour - the hour of the day
    */
   const processGridClick = (day: string, hour: string): void => {
-    if ($editEvent) editEvent.set(undefined);
-    if ($showCreateTask || $editEvent) return;
-
+    if ($showCreateTask) return;
+    if ($editEvent) {
+      editEvent.set(undefined);
+      return;
+    }
     if (!$showEventDetails) {
       const rect = refs[day][hour].getBoundingClientRect();
       selectedPosition.set({
