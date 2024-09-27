@@ -2,15 +2,10 @@
   import { onMount } from 'svelte';
   import { fade } from 'svelte/transition';
 
+  import { toast } from "svelte-sonner";
+
   import LoaderCircle from "lucide-svelte/icons/loader-circle";
   import CalendarIcon from "lucide-svelte/icons/calendar";
-
-  import { Button } from "$lib/scn-components/ui/button";
-  import { Calendar } from "$lib/scn-components/ui/calendar";
-  import { Checkbox } from "$lib/scn-components/ui/checkbox";
-  import { Label } from "$lib/scn-components/ui/label";
-  import * as Popover from "$lib/scn-components/ui/popover";
-  import * as AlertDialog from "$lib/scn-components/ui/alert-dialog";
 
   import {
     DateFormatter,
@@ -18,12 +13,22 @@
     fromDate,
     getLocalTimeZone,
   } from "@internationalized/date";
+
+  import { Button } from "$lib/scn-components/ui/button";
+  import { Calendar } from "$lib/scn-components/ui/calendar";
+  import { Checkbox } from "$lib/scn-components/ui/checkbox";
+  import { Label } from "$lib/scn-components/ui/label";
+  import * as AlertDialog from "$lib/scn-components/ui/alert-dialog";
+  import * as Popover from "$lib/scn-components/ui/popover";
+
   import { cn } from "$lib/scn-utils";
 
   import type { Event } from '$lib/types';
-  import { calendars, editEvent, events, selectedPosition, showEventDetails } from '$lib/stores';
+  import { editEvent, events, selectedPosition, showEventDetails } from '$lib/stores';
   import { API_HOST } from '$lib/vars';
-  import { convertToEvent, fetchEvents, getCalendarsArray } from '$lib/utils';
+  import { convertToEvent, fetchEvents } from '$lib/utils';
+
+  import CalendarDropdown from './CalendarDropdown.svelte';
 
   export let gridDiv: HTMLElement;
 
@@ -46,12 +51,11 @@
   let left: string | number;
 
   let savingEvent = false;
-  let showCalendarDropdown = false;
   let showRecurringAlert = false;
+  let showIncompleteAlert = false;
 
   onMount(() => {
       titleComponent.focus();
-      $editEvent.recurring = false;
   });
 
   const calculateTop = () => {
@@ -98,13 +102,22 @@
       duration: (new Date(`${dateString} ${endTime}`).getTime() - new Date(`${dateString} ${startTime}`).getTime()) / 60000,
     };
 
-    await fetch(`${API_HOST}/events/${event.id}?recurring=${recurring}`, {
+    const response = await fetch(`${API_HOST}/events/${event.id}?recurring=${recurring}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(event),
       credentials: 'include',
+    });
+    if (!response.ok) {
+      toast.error("Failed to update event", {
+        description: event.title,
+      });
+      return;
+    }
+    toast.success("Event has been updated", {
+      description: event.title,
     });
     if (recurring) await fetchEvents();
     else events.set([...$events].map((e) => (e.id === event.id ? event : e)));
@@ -116,7 +129,7 @@
 
   const saveEvent = async () => {
     if (!$editEvent.title || !date || !startTime || !endTime) {
-      alert('Please fill in all the fields');
+      showIncompleteAlert = true;
       return;
     }
     savingEvent = true;
@@ -133,18 +146,25 @@
         showRecurringAlert = true;
         return;
       }
-      else {
-        await fetch(`${API_HOST}/events/${event.id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(event),
-          credentials: 'include',
+      const res = await fetch(`${API_HOST}/events/${event.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(event),
+        credentials: 'include',
+      });
+      if (!res.ok) {
+        toast.error("Failed to update event", {
+          description: event.title,
         });
-
-        events.set([...$events].map((e) => (e.id === event.id ? event : e)));
+        return;
       }
+      toast.success("Event has been updated", {
+        description: event.title,
+      });
+
+      events.set([...$events].map((e) => (e.id === event.id ? event : e)));
     }
     else {
       const res = await fetch(`${API_HOST}/events`, {
@@ -155,18 +175,22 @@
         body: JSON.stringify(event),
         credentials: 'include',
       });
+      if (!res.ok) {
+        toast.error("Failed to create event", {
+          description: event.title,
+        });
+        return;
+      }
       const eventJson = await res.json();
+      toast.success("Event has been created", {
+        description: event.title,
+      });
 
       if (event.recurring) await fetchEvents();
       else events.set([...$events, convertToEvent(eventJson)]);
     }
     savingEvent = false;
     editEvent.set(undefined);
-  };
-
-  const selectCalendar = (id: string) => {
-    $editEvent.calendarId = id;
-    showCalendarDropdown = false;
   };
 
   $: $editEvent, updateInformation();
@@ -284,50 +308,16 @@
                     </div>
                 {/if}
 
-                {#if showCalendarDropdown}
-                    <div class="flex flex-col justify-center shadow-lg w-min p-2 select-none cursor-pointer">
-                        {#each getCalendarsArray() as calendar (calendar.id)}
-                            <button
-                              class="mt-2 p-1 flex items-center hover:bg-gray-200 rounded-lg w-full"
-                              on:click={() => selectCalendar(calendar.id)}>
-                                <div
-                                  class="rounded-sm w-3 h-3"
-                                  style="background-color: {calendar.color};">
-                                </div>
-                                <div class="flex items-center">
-                                    <p class="text-sm ml-2">
-                                        {calendar.name}
-                                    </p>
-                                    {#if calendar.id === $editEvent.calendarId}
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="ml-1 size-4">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                                        </svg>
-                                    {/if}
-                                </div>
-                            </button>
-                        {/each}
-                    </div>
-                {:else}
-                    <button
-                      class="mt-2 flex items-center cursor-pointer select-none w-min hover:border border-gray-300 rounded-md p-1 hover:bg-gray-200"
-                      on:click={() => showCalendarDropdown = !showCalendarDropdown}
-                      tabindex="0"
-                    >
-                        <div
-                          class="rounded-sm w-3 h-3"
-                          style="background-color: {$calendars.get($editEvent.calendarId).color};">
-                        </div>
-                        <p class="text-sm ml-2">{$calendars.get($editEvent.calendarId).name}</p>
-                    </button>
-                {/if}
+                <div class="mt-2">
+                    <CalendarDropdown bind:selected={$editEvent.calendarId} />
+                </div>
             </div>
 
             <div class="flex w-full mt-auto">
                 <div class="ml-auto">
                     <Button
                       variant="ghost"
-                      on:click={() => editEvent.set(undefined)}
-                    >
+                      on:click={() => editEvent.set(undefined)}>
                         Cancel
                     </Button>
                     <Button
@@ -335,7 +325,7 @@
                     >
                         {#if $editEvent.id}
                             {#if savingEvent}
-                                <LoaderCircle class="mr-2 w-4 h-4 text-white" />
+                                <LoaderCircle class="mr-2 w-4 h-4 text-white animate-spin" />
                                 <p class="text-white">
                                     Saving
                                 </p>
@@ -346,7 +336,7 @@
                             {/if}
                         {:else}
                             {#if savingEvent}
-                                <LoaderCircle class="mr-2 w-4 h-4 text-white" />
+                                <LoaderCircle class="mr-2 w-4 h-4 text-white animate-spin" />
                                 <p class="text-white">
                                     Creating
                                 </p>
@@ -364,16 +354,30 @@
 </div>
 
 <AlertDialog.Root open={showRecurringAlert}>
-  <AlertDialog.Content>
-    <AlertDialog.Header>
-      <AlertDialog.Title>Apply this change to all future events as well?</AlertDialog.Title>
-      <AlertDialog.Description>
-          This is a recurring event. Selecting Yes will apply this change to all future events as well.
-      </AlertDialog.Description>
-    </AlertDialog.Header>
-    <AlertDialog.Footer>
-      <AlertDialog.Cancel on:click={async () => await saveRecurringEvent(false)}>No</AlertDialog.Cancel>
-      <AlertDialog.Action on:click={async () => await saveRecurringEvent(true)}>Yes</AlertDialog.Action>
-    </AlertDialog.Footer>
-  </AlertDialog.Content>
+    <AlertDialog.Content>
+        <AlertDialog.Header>
+            <AlertDialog.Title>Apply this change to all future events as well?</AlertDialog.Title>
+            <AlertDialog.Description>
+                This is a recurring event. Selecting Yes will apply this change to all future events as well.
+            </AlertDialog.Description>
+        </AlertDialog.Header>
+        <AlertDialog.Footer>
+            <AlertDialog.Cancel on:click={async () => await saveRecurringEvent(false)}>No</AlertDialog.Cancel>
+            <AlertDialog.Action on:click={async () => await saveRecurringEvent(true)}>Yes</AlertDialog.Action>
+        </AlertDialog.Footer>
+    </AlertDialog.Content>
+</AlertDialog.Root>
+
+<AlertDialog.Root open={showIncompleteAlert}>
+    <AlertDialog.Content>
+        <AlertDialog.Header>
+            <AlertDialog.Title>Missing Information</AlertDialog.Title>
+            <AlertDialog.Description>
+                Please fill in all the required fields before saving the event.
+            </AlertDialog.Description>
+        </AlertDialog.Header>
+        <AlertDialog.Footer>
+            <AlertDialog.Action on:click={() => showIncompleteAlert = false}>Ok</AlertDialog.Action>
+        </AlertDialog.Footer>
+    </AlertDialog.Content>
 </AlertDialog.Root>

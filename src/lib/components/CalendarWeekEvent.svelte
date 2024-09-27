@@ -2,9 +2,13 @@
   import { fade } from 'svelte/transition';
   import { onDestroy, onMount } from 'svelte';
 
+  import { toast } from "svelte-sonner";
+
+  import * as AlertDialog from "$lib/scn-components/ui/alert-dialog";
+
   import type { Event, EventPosition } from '$lib/types';
   import { fetchEvents, getTimeRange } from '$lib/utils';
-  import { calendars, dragging, editEvent, eventPositions, gridItemHeight, selectedEvent, selectedPosition, showEventDetails } from '$lib/stores';
+  import { calendars, dragging, editEvent, eventPositions, gridItemHeight, selectedEvent, selectedPosition, showCreateTask, showEventDetails } from '$lib/stores';
   import { API_HOST } from '$lib/vars';
 
   export let event: Event;
@@ -16,7 +20,10 @@
   let dragged = false;
   let originalDate: Date;
 
+  let showRecurringAlert = false;
+
   const handleMouseDown = (e: MouseEvent) => {
+    if ($showCreateTask) return;
     showEventDetails.set(false);
     initialMouse = e.clientY;
     initialComponent = position.top;
@@ -50,6 +57,31 @@
     }
   }
 
+  const confirmRecurringUpdate = async (recurring: boolean) => {
+    const res = await fetch(`${API_HOST}/events/${event.id}?recurring=${recurring}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        ...event,
+        date: event.date
+      }),
+      credentials: 'include',
+    });
+    if (!res.ok) {
+      toast.error("Failed to update event time", {
+        description: event.title,
+      });
+      return;
+    }
+    toast.success("Event time has been updated", {
+      description: event.title,
+    });
+
+    if (recurring) await fetchEvents();
+  }
+
   const handleMouseUp = async () => {
     if (!dragged) return;
 
@@ -63,15 +95,16 @@
     });
     dragging.set(undefined);
 
-    let recurring = false;
     if (event.recurrenceId) {
-      recurring = confirm('Do you want to update all future events to be at this time as well?');
+      showRecurringAlert = true;
+      return;
     }
-    await fetch(`${API_HOST}/events/${event.id}?recurring=${recurring}`, {
+    const res = await fetch(`${API_HOST}/events/${event.id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
       },
+
       body: JSON.stringify({
         ...event,
         date: event.date
@@ -79,7 +112,14 @@
       credentials: 'include',
     });
 
-    if (recurring) await fetchEvents();
+    if (!res.ok) {
+      toast.error("Failed to update event time", {
+        description: event.title,
+      });
+    }
+    toast.success("Event time has been updated", {
+      description: event.title,
+    });
   }
 
   /**
@@ -87,15 +127,16 @@
    * @param event - the event that was clicked
    */
   const setSelectedEvent = (e: Event): void => {
-      mouseDown = false;
-      if (dragged) {
-          dragged = false;
-          return;
-      }
-      if ($editEvent) return;
-      selectedEvent.set(e);
-      selectedPosition.set($eventPositions.get(e.id));
-      showEventDetails.set(true);
+    if ($showCreateTask) return;
+    mouseDown = false;
+    if (dragged) {
+        dragged = false;
+        return;
+    }
+    if ($editEvent) return;
+    selectedEvent.set(e);
+    selectedPosition.set($eventPositions.get(e.id));
+    showEventDetails.set(true);
   }
 
   onMount(() => {
@@ -135,3 +176,18 @@
         </div>
     </div>
 </div>
+
+<AlertDialog.Root open={showRecurringAlert}>
+    <AlertDialog.Content>
+        <AlertDialog.Header>
+            <AlertDialog.Title>Change the time for all future events as well?</AlertDialog.Title>
+            <AlertDialog.Description>
+                This is a recurring event. Selecting Yes will apply this change to all future events as well.
+            </AlertDialog.Description>
+        </AlertDialog.Header>
+        <AlertDialog.Footer>
+            <AlertDialog.Cancel on:click={async () => await confirmRecurringUpdate(false)}>No</AlertDialog.Cancel>
+            <AlertDialog.Action on:click={async () => await confirmRecurringUpdate(true)}>Yes</AlertDialog.Action>
+        </AlertDialog.Footer>
+    </AlertDialog.Content>
+</AlertDialog.Root>

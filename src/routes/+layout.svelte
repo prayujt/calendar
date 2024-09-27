@@ -1,5 +1,7 @@
 <script>
   import "../app.css";
+
+  import { Toaster } from "$lib/scn-components/ui/sonner";
 </script>
 
 <svelte:head>
@@ -12,5 +14,7 @@
   <!-- Favicon for pinned sites or larger displays (96x96) -->
   <link rel="icon" href="/favicon-96x96.png" sizes="96x96" type="image/png" />
 </svelte:head>
+
+<Toaster />
 
 <slot />

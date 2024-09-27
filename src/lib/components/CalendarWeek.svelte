@@ -6,7 +6,7 @@
   import EditEvent from './EditEvent.svelte';
 
   import type { Calendar, Event, EventPosition } from '$lib/types';
-  import { calendars, dragging, editEvent, events, eventPositions, gridItemHeight, gridItemWidth, selectedCalendars, selectedPosition, showEventDetails } from '$lib/stores';
+  import { calendars, dragging, editEvent, events, eventPositions, gridItemHeight, gridItemWidth, selectedCalendars, selectedPosition, showCreateTask, showEventDetails } from '$lib/stores';
   import { compareDates, fetchEvents, getTimeString, getCurrentHour, getMinuteFraction } from '$lib/utils';
   import { API_HOST, VITE_ENVIRONMENT } from '$lib/vars';
 
@@ -291,10 +291,9 @@
    * @param hour - the hour of the day
    */
   const processGridClick = (day: string, hour: string): void => {
-    if ($editEvent) {
-      editEvent.set(undefined);
-      return;
-    }
+    if ($editEvent) editEvent.set(undefined);
+    if ($showCreateTask || $editEvent) return;
+
     if (!$showEventDetails) {
       const rect = refs[day][hour].getBoundingClientRect();
       selectedPosition.set({
