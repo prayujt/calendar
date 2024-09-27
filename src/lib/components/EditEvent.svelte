@@ -5,11 +5,12 @@
   import LoaderCircle from "lucide-svelte/icons/loader-circle";
   import CalendarIcon from "lucide-svelte/icons/calendar";
 
-  import { Button } from "$lib/scn-components/ui/button/index.js";
-  import { Calendar } from "$lib/scn-components/ui/calendar/index.js";
-  import { Checkbox } from "$lib/scn-components/ui/checkbox/index.js";
-  import { Label } from "$lib/scn-components/ui/label/index.js";
-  import * as Popover from "$lib/scn-components/ui/popover/index.js";
+  import { Button } from "$lib/scn-components/ui/button";
+  import { Calendar } from "$lib/scn-components/ui/calendar";
+  import { Checkbox } from "$lib/scn-components/ui/checkbox";
+  import { Label } from "$lib/scn-components/ui/label";
+  import * as Popover from "$lib/scn-components/ui/popover";
+  import * as AlertDialog from "$lib/scn-components/ui/alert-dialog";
 
   import {
     DateFormatter,
@@ -20,7 +21,7 @@
   import { cn } from "$lib/scn-utils";
 
   import type { Event } from '$lib/types';
-  import { calendars, editEvent, events, selectedPosition } from '$lib/stores';
+  import { calendars, editEvent, events, selectedPosition, showEventDetails } from '$lib/stores';
   import { API_HOST } from '$lib/vars';
   import { convertToEvent, fetchEvents, getCalendarsArray } from '$lib/utils';
 
@@ -46,10 +47,11 @@
 
   let savingEvent = false;
   let showCalendarDropdown = false;
+  let showRecurringAlert = false;
 
   onMount(() => {
-    titleComponent.focus();
-    $editEvent.recurring = false;
+      titleComponent.focus();
+      $editEvent.recurring = false;
   });
 
   const calculateTop = () => {
@@ -72,17 +74,44 @@
 
   const updateInformation = () => {
     if (!$editEvent) return;
-    date = fromDate($editEvent.date, getLocalTimeZone());
-    startTime = $editEvent.date.toLocaleTimeString('en-CA', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
+    if (!date) {
+      date = fromDate($editEvent.date, getLocalTimeZone());
+      startTime = $editEvent.date.toLocaleTimeString('en-CA', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      });
+      endTime = new Date($editEvent.date.getTime() + $editEvent.duration * 60000).toLocaleTimeString('en-CA', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      });
+    }
+  }
+
+  const saveRecurringEvent = async (recurring: boolean) => {
+    if (!$editEvent.title || !date || !startTime || !endTime) return;
+    const dateString = date.toDate(getLocalTimeZone()).toISOString().split('T')[0]
+    const event: Event = {
+      ...$editEvent,
+      date: new Date(`${dateString} ${startTime}`),
+      duration: (new Date(`${dateString} ${endTime}`).getTime() - new Date(`${dateString} ${startTime}`).getTime()) / 60000,
+    };
+
+    await fetch(`${API_HOST}/events/${event.id}?recurring=${recurring}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(event),
+      credentials: 'include',
     });
-    endTime = new Date($editEvent.date.getTime() + $editEvent.duration * 60000).toLocaleTimeString('en-CA', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
-    });
+    if (recurring) await fetchEvents();
+    else events.set([...$events].map((e) => (e.id === event.id ? event : e)));
+    editEvent.set(undefined);
+    savingEvent = false;
+    showEventDetails.set(false);
+    showRecurringAlert = false;
   }
 
   const saveEvent = async () => {
@@ -91,6 +120,7 @@
       return;
     }
     savingEvent = true;
+
     const dateString = date.toDate(getLocalTimeZone()).toISOString().split('T')[0]
     const event: Event = {
       ...$editEvent,
@@ -99,21 +129,22 @@
     };
 
     if (event.id) {
-      let recurring = false;
       if (event.recurrenceId) {
-        recurring = confirm('Do you want to update all future events as well?');
+        showRecurringAlert = true;
+        return;
       }
-      await fetch(`${API_HOST}/events/${event.id}?recurring=${recurring}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(event),
-        credentials: 'include',
-      });
+      else {
+        await fetch(`${API_HOST}/events/${event.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(event),
+          credentials: 'include',
+        });
 
-      if (recurring) await fetchEvents();
-      else events.set([...$events].map((e) => (e.id === event.id ? event : e)));
+        events.set([...$events].map((e) => (e.id === event.id ? event : e)));
+      }
     }
     else {
       const res = await fetch(`${API_HOST}/events`, {
@@ -251,18 +282,6 @@
                         Recurring
                       </Label>
                     </div>
-                    <!-- <div class="flex items-center mt-2 cursor-pointer w-min">
-                         <input
-                         tabindex="0"
-                         type="checkbox"
-                         bind:checked={$editEvent.recurring}
-                         class="cursor-pointer w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded"/>
-                         <button on:click={() => $editEvent.recurring = !$editEvent.recurring} tabindex="-1">
-                         <p class="ms-2 text-sm font-medium text-gray-900">
-                         Recurring
-                         </p>
-                         </button>
-                         </div> -->
                 {/if}
 
                 {#if showCalendarDropdown}
@@ -343,3 +362,18 @@
         </div>
     {/if}
 </div>
+
+<AlertDialog.Root open={showRecurringAlert}>
+  <AlertDialog.Content>
+    <AlertDialog.Header>
+      <AlertDialog.Title>Apply this change to all future events as well?</AlertDialog.Title>
+      <AlertDialog.Description>
+          This is a recurring event. Selecting Yes will apply this change to all future events as well.
+      </AlertDialog.Description>
+    </AlertDialog.Header>
+    <AlertDialog.Footer>
+      <AlertDialog.Cancel on:click={async () => await saveRecurringEvent(false)}>No</AlertDialog.Cancel>
+      <AlertDialog.Action on:click={async () => await saveRecurringEvent(true)}>Yes</AlertDialog.Action>
+    </AlertDialog.Footer>
+  </AlertDialog.Content>
+</AlertDialog.Root>

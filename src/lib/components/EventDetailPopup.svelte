@@ -5,6 +5,8 @@
   import { fetchEvents, getDateString, getTimeRange } from '$lib/utils';
   import { calendars, editEvent, events, selectedEvent, selectedPosition, showEventDetails } from '$lib/stores';
 
+  import * as AlertDialog from "$lib/scn-components/ui/alert-dialog";
+
   export let gridDiv: HTMLElement;
 
   let component: HTMLElement;
@@ -13,6 +15,8 @@
 
   let top: number;
   let left: number;
+
+  let showRecurringDelete = false;
 
   const calculateTop = () => {
     const temp = $selectedPosition.top - height / 4;
@@ -30,19 +34,30 @@
     return temp;
   };
 
-  const deleteEvent = async (eventId: string) => {
-    // TODO: Replace with real modal
-    let recurring = false;
-    if ($selectedEvent.recurrenceId)
-      recurring = confirm('Do you want to delete all future recurring events as well?')
-    const response = await fetch(`${API_HOST}/events/${eventId}?recurring=${recurring}`, {
+  const deleteRecurringEvent = async (recurring: boolean) => {
+    const response = await fetch(`${API_HOST}/events/${$selectedEvent.id}?recurring=${recurring}`, {
       method: 'DELETE',
       credentials: 'include',
     });
     if (response.ok) {
       if (recurring) await fetchEvents();
-      else events.update((prev) => prev.filter((event) => event.id !== eventId));
+      else events.update((prev) => prev.filter((event) => event.id !== $selectedEvent.id));
     }
+    showEventDetails.set(false);
+    showRecurringDelete = false;
+  };
+
+  const deleteEvent = async () => {
+    if ($selectedEvent.recurrenceId) {
+      showRecurringDelete = true;
+      return;
+    }
+    const response = await fetch(`${API_HOST}/events/${$selectedEvent.id}`, {
+      method: 'DELETE',
+      credentials: 'include',
+    });
+    if (response.ok)
+      events.update((prev) => prev.filter((event) => event.id !== $selectedEvent.id));
     showEventDetails.set(false);
   };
 
@@ -113,3 +128,18 @@
         </div>
     </div>
  </div>
+
+<AlertDialog.Root open={showRecurringDelete}>
+  <AlertDialog.Content>
+    <AlertDialog.Header>
+      <AlertDialog.Title>Delete all future events?</AlertDialog.Title>
+      <AlertDialog.Description>
+          This is a recurring event. Selecting Yes will delete all future events as well.
+      </AlertDialog.Description>
+    </AlertDialog.Header>
+    <AlertDialog.Footer>
+      <AlertDialog.Cancel on:click={async () => await deleteRecurringEvent(false)}>No</AlertDialog.Cancel>
+      <AlertDialog.Action on:click={async () => await deleteRecurringEvent(true)}>Yes</AlertDialog.Action>
+    </AlertDialog.Footer>
+  </AlertDialog.Content>
+</AlertDialog.Root>
