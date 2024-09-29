@@ -122,7 +122,6 @@
                 </div>
 
                 <p class="text-xs text-gray-600">{getDateString(task.deadline)} ⋅ {getTimeString(true, task.deadline)}</p>
-                <p class="text-xs text-gray-600">{task.description}</p>
 
                 <Tooltip.Root>
                     <Tooltip.Trigger asChild let:builder>
