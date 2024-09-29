@@ -56,7 +56,7 @@ export interface Task {
     calendarId: string;
     title: string;
     description: string;
-    duration: number;
+    duration?: number;
     deadline: Date;
     difficulty: number;
     priority: TaskPriority;

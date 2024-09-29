@@ -14,7 +14,7 @@
 <Select.Root
     selected={selectedCalendar}
     onSelectedChange={(s) => selected = s.value}>
-    <Select.Trigger class="w-[180px]">
+    <Select.Trigger class="w-52">
         <div class="flex items-center">
             {#if selected}
                 <div

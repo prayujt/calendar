@@ -235,7 +235,7 @@
                 </div>
 
                 <div class="flex-col mt-4 w-full">
-                    <div class="mr-2 w-full">
+                    <div class="w-full">
                         <Popover.Root>
                             <Popover.Trigger asChild let:builder>
                                 <Button
@@ -255,31 +255,34 @@
                             </Popover.Content>
                         </Popover.Root>
                     </div>
-                    <div class="flex mt-2">
+
+                    <div class="flex mt-2 gap-2 relative">
                         <div class="flex items-center">
+                            <svg class="z-20 absolute left-2 w-5 h-5 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                                <path fill-rule="evenodd" d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm11-4a1 1 0 1 0-2 0v4a1 1 0 0 0 .293.707l3 3a1 1 0 0 0 1.414-1.414L13 11.586V8Z" clip-rule="evenodd"/>
+                            </svg>
                             <input
                               type="time"
-                              class="bg-gray-50 border leading-none border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 pr-8 focus:outline-none"
+                              class="z-10 border leading-none border-gray-300 text-gray-900 text-sm rounded-lg block w-min p-2.5 pl-7 focus:outline-none"
                               min="00:00" max="23:59"
                               bind:value={startTime}
                               required />
-                            <svg class="-ml-6 w-5 h-5 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
-                                <path fill-rule="evenodd" d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm11-4a1 1 0 1 0-2 0v4a1 1 0 0 0 .293.707l3 3a1 1 0 0 0 1.414-1.414L13 11.586V8Z" clip-rule="evenodd"/>
-                            </svg>
                         </div>
+
                         <div class="flex items-center">
                             <p class="mx-2 -mt-1 text-lg">-</p>
                         </div>
-                        <div class="flex items-center">
+
+                        <div class="flex items-center relative">
+                            <svg class="z-20 absolute left-2 w-5 h-5 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+                                <path fill-rule="evenodd" d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm11-4a1 1 0 1 0-2 0v4a1 1 0 0 0 .293.707l3 3a1 1 0 0 0 1.414-1.414L13 11.586V8Z" clip-rule="evenodd"/>
+                            </svg>
                             <input
                               type="time"
-                              class="bg-gray-50 border leading-none border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 pr-8 focus:outline-none"
+                              class="z-10 border leading-none border-gray-300 text-gray-900 text-sm rounded-lg block w-min p-2.5 pl-7 focus:outline-none"
                               min="00:00" max="23:59"
                               bind:value={endTime}
                               required />
-                            <svg class="-ml-6 w-5 h-5 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
-                                <path fill-rule="evenodd" d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm11-4a1 1 0 1 0-2 0v4a1 1 0 0 0 .293.707l3 3a1 1 0 0 0 1.414-1.414L13 11.586V8Z" clip-rule="evenodd"/>
-                            </svg>
                         </div>
                     </div>
                 </div>

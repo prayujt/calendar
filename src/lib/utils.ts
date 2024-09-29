@@ -1,6 +1,6 @@
 import { get } from "svelte/store";
 
-import { calendars, events } from "./stores";
+import { calendars, events, tasks } from "./stores";
 import { API_HOST } from "./vars";
 
 /**
@@ -74,6 +74,16 @@ export const convertToEvent = (event: any): any => {
 };
 
 /**
+ * Converts an ISO string event payload to an Task object
+ */
+export const convertToTask = (task: any): Task => {
+    return {
+        ...task,
+        deadline: new Date(task.deadline),
+    };
+};
+
+/**
  * Utility function for creating a custom event listener that listens for clicks outside of a specified node
  */
 export const clickOutside = (node) => {
@@ -111,4 +121,15 @@ export const fetchEvents = async () => {
     });
     const eventsJson = await newEvents.json();
     events.set(eventsJson.map((eventJson: any) => convertToEvent(eventJson)));
+};
+
+/**
+ * Utility function for fetching all tasks and updating the tasks store
+ */
+export const fetchTasks = async () => {
+    const newTasks = await fetch(`${API_HOST}/tasks`, {
+        credentials: "include",
+    });
+    const tasksJson = await newTasks.json();
+    tasks.set(tasksJson.map((taskJson: any) => convertToTask(taskJson)));
 };
