@@ -2,6 +2,8 @@
   import { fade } from 'svelte/transition';
   import { onMount } from 'svelte';
 
+  import { toast } from "svelte-sonner";
+
   import LoaderCircle from "lucide-svelte/icons/loader-circle";
   import CalendarIcon from "lucide-svelte/icons/calendar";
 
@@ -74,8 +76,14 @@
 
       if (res.ok) {
         showCreateTask.set(false);
+        toast.success('Task created', {
+          description: `Task "${task.title}" has been created`,
+        });
       } else {
         console.error('Failed to create task');
+        toast.error('Failed to create task', {
+          description: `Failed to create task "${task.title}"`,
+        });
       }
     } catch (err) {
       console.error(err);
