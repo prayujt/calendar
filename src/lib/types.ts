@@ -35,6 +35,7 @@ export interface Event {
     duration: number;
     recurrenceId?: string;
     recurring?: boolean;
+    invitees: string[];
 }
 
 export interface EventPosition {

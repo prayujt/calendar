@@ -14,11 +14,12 @@
     getLocalTimeZone,
   } from "@internationalized/date";
 
-  import { Button } from "$lib/scn-components/ui/button";
+  import { Button, buttonVariants } from "$lib/scn-components/ui/button";
   import { Calendar } from "$lib/scn-components/ui/calendar";
   import { Checkbox } from "$lib/scn-components/ui/checkbox";
   import { Label } from "$lib/scn-components/ui/label";
   import * as AlertDialog from "$lib/scn-components/ui/alert-dialog";
+  import * as Dialog from "$lib/scn-components/ui/dialog";
   import * as Popover from "$lib/scn-components/ui/popover";
 
   import { cn } from "$lib/scn-utils";
@@ -37,6 +38,7 @@
   });
 
   let date: DateValue | undefined = undefined;
+  let invitees: string = '';
 
   let startTime: string;
   let endTime: string;
@@ -53,6 +55,7 @@
   let savingEvent = false;
   let showRecurringAlert = false;
   let showIncompleteAlert = false;
+  let showInviteDialog = false;
 
   onMount(() => {
       titleComponent.focus();
@@ -193,6 +196,14 @@
     editEvent.set(undefined);
   };
 
+  const saveInvitees = () => {
+    editEvent.set({
+      ...$editEvent,
+      invitees: invitees.split('\n').filter((email) => email.trim() !== '' && email.trim() !== ' '),
+    });
+    showInviteDialog = false;
+  }
+
   $: $editEvent, updateInformation();
   $: component, width = component && component.getBoundingClientRect().width;
   $: component, height = component && component.getBoundingClientRect().height;
@@ -297,7 +308,7 @@
                 </div>
             </div>
 
-            <div class="flex flex-col justify-center">
+            <div class="flex flex-col justify-center mb-4">
                 {#if !$editEvent.id}
                     <div class="flex items-center space-x-2">
                       <Checkbox id="terms" bind:checked={$editEvent.recurring} aria-labelledby="terms-label" />
@@ -317,6 +328,31 @@
             </div>
 
             <div class="flex w-full mt-auto">
+                <Dialog.Root
+                  bind:open={showInviteDialog}
+                >
+                      <Dialog.Trigger class={buttonVariants({ variant: "outline" })}>
+                          Invite
+                      </Dialog.Trigger>
+                      <Dialog.Content>
+                          <Dialog.Header>
+                              <Dialog.Title>Would you like to invite anyone else?</Dialog.Title>
+                          </Dialog.Header>
+
+                          <textarea
+                            class="text-md pl-1 h-32 w-full focus:outline-none resize-none"
+                            tabindex="0"
+                            placeholder="Add email addresses separated by newlines"
+                            bind:value={invitees}
+                          />
+
+                          <Dialog.Footer>
+                              <Button on:click={saveInvitees}>
+                                  Save
+                              </Button>
+                          </Dialog.Footer>
+                      </Dialog.Content>
+                </Dialog.Root>
                 <div class="ml-auto">
                     <Button
                       variant="ghost"
