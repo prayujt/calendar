@@ -108,10 +108,9 @@
                                 />
                             {:else}
                                 <div class="flex items-center justify-center bg-gray-300 rounded-full w-8 h-8 text-3xl text-gray-800">
-                                    {#if $allUsers.get(userId).name}
-                                        {#each $allUsers.get(userId).name.split(" ").slice(0, 2) as part}
-                                            {part.charAt(0).toUpperCase()}
-                                        {/each}
+                                    {#if $allUsers.get(userId).firstName && $allUsers.get(userId).lastName}
+                                        <p class="text-sm">{$allUsers.get(userId).firstName.charAt(0).toUpperCase()}</p>
+                                        <p class="text-sm">{$allUsers.get(userId).lastName.charAt(0).toUpperCase()}</p>
                                     {/if}
                                 </div>
                             {/if}
@@ -141,7 +140,8 @@
                                         {:else}
                                             <div class="flex items-center justify-center bg-gray-300 rounded-full w-6 h-6 text-3xl text-gray-800">
                                                 {#if user.firstName && user.lastName}
-                                                    {user.firstName.charAt(0).toUpperCase()} {user.lastName.charAt(0).toUpperCase()}
+                                                    <p class="text-xs">{user.firstName.charAt(0).toUpperCase()}</p>
+                                                    <p class="text-xs">{user.lastName.charAt(0).toUpperCase()}</p>
                                                 {/if}
                                             </div>
                                         {/if}
