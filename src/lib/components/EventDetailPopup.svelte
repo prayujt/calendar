@@ -4,8 +4,9 @@
   import { toast } from "svelte-sonner";
 
   import * as AlertDialog from "$lib/scn-components/ui/alert-dialog";
+  import * as Dialog from "$lib/scn-components/ui/dialog";
   import * as Tooltip from "$lib/scn-components/ui/tooltip";
-  import { Button } from "$lib/scn-components/ui/button";
+  import { Button, buttonVariants } from "$lib/scn-components/ui/button";
 
   import { API_HOST } from '$lib/vars';
   import { fetchEvents, getDateString, getTimeRange } from '$lib/utils';
@@ -21,6 +22,9 @@
   let left: number;
 
   let showRecurringDelete = false;
+  let showShareDialog = false;
+
+  let shareEmailList = '';
 
   const calculateTop = () => {
     const temp = $selectedPosition.top - height / 4;
@@ -92,6 +96,27 @@
 
     showEventDetails.set(false);
   };
+
+  const shareEvent = async() => {
+    const response = await fetch(`${API_HOST}/events/${$selectedEvent.id}/share`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ emails: shareEmailList.split('\n') }),
+    });
+    if (!response.ok) {
+      toast.error("Failed to share event", {
+        description: $selectedEvent.title,
+      });
+      return;
+    }
+    toast.success("Event has been shared", {
+      description: `Shared ${$selectedEvent.title} with ${shareEmailList.replaceAll('\n', ', ')}`
+    });
+    showShareDialog = false;
+  }
 
   $: component, width = component && component.getBoundingClientRect().width;
   $: component, height = component && component.getBoundingClientRect().height;
@@ -175,12 +200,40 @@
                 <br>
             {/each}
         </div>
-        <div class="flex items-center ml-auto mt-auto">
-            <div
-              class="rounded-sm w-3 h-3"
-              style="background-color: {$calendars.get($selectedEvent.calendarId).color};">
+        <div class="flex mt-auto ml-2">
+            <Dialog.Root
+              bind:open={showShareDialog}
+            >
+                  <Dialog.Trigger class={buttonVariants({ variant: "default" })}>
+                      Share
+                  </Dialog.Trigger>
+                  <Dialog.Content>
+                      <Dialog.Header>
+                          <Dialog.Title>Who would you like to share this event with?</Dialog.Title>
+                      </Dialog.Header>
+
+                      <textarea
+                        class="text-md pl-1 h-32 w-full focus:outline-none resize-none"
+                        tabindex="0"
+                        placeholder="Add email addresses separated by newlines"
+                        bind:value={shareEmailList}
+                      />
+
+                      <Dialog.Footer>
+                          <Button on:click={shareEvent}>
+                              Share
+                          </Button>
+                      </Dialog.Footer>
+                  </Dialog.Content>
+            </Dialog.Root>
+
+            <div class="flex items-center ml-auto">
+                <div
+                  class="rounded-sm w-3 h-3"
+                  style="background-color: {$calendars.get($selectedEvent.calendarId).color};">
+                </div>
+                <p class="text-sm ml-2">{$calendars.get($selectedEvent.calendarId).name}</p>
             </div>
-            <p class="text-sm ml-2">{$calendars.get($selectedEvent.calendarId).name}</p>
         </div>
     </div>
  </div>
