@@ -40,8 +40,30 @@
     showCalendarDetails.set(false);
   };
 
-  const inviteUser = async (userId: string) => {
-      console.log(userId);
+  const inviteUser = async (name: string) => {
+    const user = allUsersArr.find((user) => `${user.firstName} ${user.lastName}` === name);
+    if (!user) {
+      return;
+    }
+    const calendarResponse = await fetch(`${API_HOST}/calendars/${$selectedCalendar.id}/members`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ userId: user.id }),
+    });
+    if (!calendarResponse.ok) {
+      toast.error("Failed to add user", {
+        description: `Failed to invite ${name} to ${$selectedCalendar.name} calendar`,
+      });
+      return
+    }
+    else {
+      toast.success("User added", {
+          description: `${name} invited to ${$selectedCalendar.name} calendar`,
+      });
+    }
   };
 </script>
 
@@ -101,38 +123,36 @@
 
             <div class="w-3/5">
                 <Command.Root>
-                  <Command.Input placeholder="Search users..." />
-                  <Command.Empty>No user found.</Command.Empty>
-                  <Command.Group>
-                    {#each allUsersArr as user}
-                      <Command.Item
-                        value={user.id}
-                        onSelect={(userId) => inviteUser(userId)}>
-                          <div class="flex items-center gap-2">
-                              <div>
-                                  {#if user.avatar}
-                                      <img
-                                          class="w-6 h-6 rounded-full transition-opacity duration-100 ease-in-out"
-                                          src={user.avatar}
-                                          alt="User Avatar"
-                                      />
-                                  {:else}
-                                      <div class="flex items-center justify-center bg-gray-300 rounded-full w-6 h-6 text-3xl text-gray-800">
-                                          {#if user.name}
-                                              {#each user.name.split(" ").slice(0, 2) as part}
-                                                  {part.charAt(0).toUpperCase()}
-                                              {/each}
-                                          {/if}
-                                      </div>
-                                  {/if}
-                              </div>
-                              <p class="text-md">
-                                  {user.firstName} {user.lastName}
-                              </p>
-                          </div>
-                      </Command.Item>
-                    {/each}
-                  </Command.Group>
+                    <Command.Input placeholder="Add users..." />
+                    <Command.Empty>No user found.</Command.Empty>
+                    <Command.Group>
+                        {#each allUsersArr as user}
+                            <Command.Item
+                              value={`${user.firstName} ${user.lastName}`}
+                              onSelect={(name) => inviteUser(name)}>
+                                <div class="flex items-center gap-2">
+                                    <div>
+                                        {#if user.avatar}
+                                            <img
+                                                class="w-6 h-6 rounded-full transition-opacity duration-100 ease-in-out"
+                                                src={user.avatar}
+                                                alt="User Avatar"
+                                            />
+                                        {:else}
+                                            <div class="flex items-center justify-center bg-gray-300 rounded-full w-6 h-6 text-3xl text-gray-800">
+                                                {#if user.firstName && user.lastName}
+                                                    {user.firstName.charAt(0).toUpperCase()} {user.lastName.charAt(0).toUpperCase()}
+                                                {/if}
+                                            </div>
+                                        {/if}
+                                    </div>
+                                    <p class="text-md">
+                                        {user.firstName} {user.lastName}
+                                    </p>
+                                </div>
+                            </Command.Item>
+                        {/each}
+                    </Command.Group>
                 </Command.Root>
             </div>
         </div>
