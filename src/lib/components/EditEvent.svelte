@@ -137,7 +137,7 @@
     }
     savingEvent = true;
 
-    const dateString = date.toDate(getLocalTimeZone()).toISOString().split('T')[0]
+    const dateString = date.toDate(getLocalTimeZone()).toLocaleDateString('en-CA');
     const event: Event = {
       ...$editEvent,
       date: new Date(`${dateString} ${startTime}`),

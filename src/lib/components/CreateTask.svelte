@@ -57,7 +57,7 @@
     }
     createTaskLoading = true;
 
-    const dateString = deadlineDate.toDate(getLocalTimeZone()).toISOString().split('T')[0]
+    const dateString = deadlineDate.toDate(getLocalTimeZone()).toLocaleDateString('en-CA');
     const newTask = {
       ...task,
       deadline: new Date(`${dateString} ${deadlineTime}`),
