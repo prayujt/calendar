@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { calendars, commandMenuOpen, editEvent, events, selectedPosition, userInfo } from '$lib/stores';
+  import { allUsers, calendars, commandMenuOpen, editEvent, events, selectedPosition, userInfo } from '$lib/stores';
   import type { Calendar, Event, IdpUser, User } from '$lib/types';
   import { convertToEvent, fetchEvents, getCalendarsArray, getDateString, getTimeRange } from '$lib/utils';
   import { API_HOST } from '$lib/vars';
@@ -48,6 +48,13 @@
         avatar: 'https://static.prayujt.com/images/PRAYUJ.jpg'
       } as User);
     }
+    const res = await fetch(`${API_HOST}/users`, {
+      credentials: 'include',
+    });
+    const userJson = await res.json();
+    const userMap = new Map<string, User>();
+    userJson.forEach((user: User) => userMap.set(user.id, user));
+    allUsers.set(userMap);
   });
 
   const isMac = typeof navigator !== 'undefined' ? navigator.userAgent.includes('Mac') : false;

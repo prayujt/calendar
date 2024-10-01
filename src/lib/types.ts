@@ -24,6 +24,7 @@ export interface Calendar {
     name: string;
     color: string;
     isDefault: boolean;
+    members: string[];
 }
 
 export interface Event {
