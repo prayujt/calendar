@@ -98,7 +98,7 @@
             <div class="w-2/5">
                 <p class="text-gray-400 mb-2">Members</p>
                 {#each $selectedCalendar.members as userId}
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 mb-2">
                         <div>
                             {#if $allUsers.get(userId).avatar}
                                 <img
